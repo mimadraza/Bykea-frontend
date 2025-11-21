@@ -1,6 +1,8 @@
 // src/Component/DriverOfferCard.tsx
 import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
+import AccessibleText from "./AccessibleText";
+import { useTranslation } from "react-i18next"; // 1. Import this
 
 export interface DriverOffer {
   id: string;
@@ -17,6 +19,7 @@ interface Props {
 }
 
 const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
+  const { t } = useTranslation(); // 2. Get the translate function
   return (
     <View style={styles.card}>
       {/* Avatar */}
@@ -25,30 +28,30 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
           <Image source={{ uri: offer.avatarUrl }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Text style={styles.avatarInitial}>
+            <AccessibleText style={styles.avatarInitial}>
               {offer.name.charAt(0).toUpperCase()}
-            </Text>
+            </AccessibleText>
           </View>
         )}
       </View>
 
-      {/* Text */}
+      {/* AccessibleText */}
       <View style={styles.textCol}>
-        <Text style={styles.eta}>{offer.eta}</Text>
-        <Text style={styles.name}>{offer.name}</Text>
+        <AccessibleText style={styles.eta}>{offer.eta}</AccessibleText>
+        <AccessibleText style={styles.name}>{offer.name}</AccessibleText>
         <View style={styles.ratingRow}>
-          <Text style={styles.star}>★</Text>
-          <Text style={styles.rating}>{offer.rating.toFixed(2)}</Text>
+          <AccessibleText style={styles.star}>★</AccessibleText>
+          <AccessibleText style={styles.rating}>{offer.rating.toFixed(2)}</AccessibleText>
         </View>
       </View>
 
       {/* Buttons */}
       <View style={styles.btnCol}>
         <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
-          <Text style={styles.acceptText}>Accept</Text>
+          <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
-          <Text style={styles.rejectText}>Reject</Text>
+          <AccessibleText style={styles.rejectText}>{t("reject_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

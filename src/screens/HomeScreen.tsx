@@ -1,25 +1,27 @@
 import React, { useRef, useState } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Animated,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import html_script from "./html_script";
-
-import TopBar from "../Component/TopBar";
-import Sidebar from "../Component/Sidebar";
 
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next"; // 1. Import this
+
+import html_script from "./html_script";
+import TopBar from "../Component/TopBar";
+import Sidebar from "../Component/Sidebar";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import AccessibleText from "../Component/AccessibleText";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
+  const { t } = useTranslation(); // 2. Get the translate function
   const mapRef = useRef<WebView>(null);
 
   // SIDEBAR STATE
@@ -66,16 +68,25 @@ const HomeScreen: React.FC = () => {
           style={styles.largeCard}
           onPress={() => navigation.navigate("Pickup")}
         >
-          <Text style={styles.largeCardTitle}>Ride</Text>
+          {/* 3. Replace hardcoded string with t("key") */}
+          <AccessibleText style={styles.largeCardTitle}>
+            {t("ride_card_title")}
+          </AccessibleText>
         </TouchableOpacity>
 
         <View style={styles.row}>
           <TouchableOpacity style={styles.smallCard}>
-            <Text style={styles.smallCardTitle}>Helpline</Text>
+            {/* 3. Replace hardcoded string with t("key") */}
+            <AccessibleText style={styles.smallCardTitle}>
+              {t("helpline_card_title")}
+            </AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.smallCard}>
-            <Text style={styles.smallCardTitle}>Delivery</Text>
+            {/* 3. Replace hardcoded string with t("key") */}
+            <AccessibleText style={styles.smallCardTitle}>
+              {t("delivery_card_title")}
+            </AccessibleText>
           </TouchableOpacity>
         </View>
       </View>

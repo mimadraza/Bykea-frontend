@@ -1,8 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Animated,
@@ -10,18 +8,20 @@ import {
 
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
+import { useTranslation } from "react-i18next"; // Import this
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, "OTP">;
 
 const OTPVerificationScreen = ({ navigation }: { navigation: NavProp }) => {
-  // HOOKS — must always be at the top, always same order
+  // HOOKS
+  const { t } = useTranslation(); // Get the translate function
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
   const [timer, setTimer] = useState(30);
 
-  const inputs = useRef<Array<TextInput | null>>([]);
-
-  // Create animations array with a fixed length (4 items) — SAFE
+  const inputs = useRef<Array<AccessibleTextInput | null>>([]);
   const animations = useRef([
     new Animated.Value(1),
     new Animated.Value(1),
@@ -71,8 +71,8 @@ const OTPVerificationScreen = ({ navigation }: { navigation: NavProp }) => {
   // UI
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Enter OTP</Text>
-      <Text style={styles.subtitle}>We have sent a verification code</Text>
+      <AccessibleText style={styles.title}>{t("otp_title")}</AccessibleText>
+      <AccessibleText style={styles.subtitle}>{t("otp_subtitle")}</AccessibleText>
 
       <View style={styles.otpContainer}>
         {otp.map((digit, index) => (
@@ -88,7 +88,7 @@ const OTPVerificationScreen = ({ navigation }: { navigation: NavProp }) => {
               },
             ]}
           >
-            <TextInput
+            <AccessibleTextInput
               ref={(el) => (inputs.current[index] = el)}
               style={[
                 styles.otpInput,
@@ -106,15 +106,18 @@ const OTPVerificationScreen = ({ navigation }: { navigation: NavProp }) => {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleVerify}>
-        <Text style={styles.buttonText}>Verify</Text>
+        <AccessibleText style={styles.buttonText}>{t("verify_btn")}</AccessibleText>
       </TouchableOpacity>
 
       <View style={styles.resendContainer}>
         {timer > 0 ? (
-          <Text style={styles.timerText}>Resend OTP in {timer}s</Text>
+          // Use interpolation for the timer
+          <AccessibleText style={styles.timerText}>
+            {t("resend_otp_timer", { timer })}
+          </AccessibleText>
         ) : (
           <TouchableOpacity onPress={() => setTimer(30)}>
-            <Text style={styles.resendText}>Resend OTP</Text>
+            <AccessibleText style={styles.resendText}>{t("resend_otp_btn")}</AccessibleText>
           </TouchableOpacity>
         )}
       </View>

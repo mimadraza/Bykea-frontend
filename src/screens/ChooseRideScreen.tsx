@@ -1,11 +1,9 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  TextInput,
 } from "react-native";
 
 import { WebView } from "react-native-webview";
@@ -17,17 +15,21 @@ import FareCounter from "../Component/FareCounter";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
+import { useTranslation } from "react-i18next"; // Import this
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ChooseRideScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
+  const { t } = useTranslation(); // Get the translate function
 
   const route = useRoute();
   const { destination } = route.params as { destination: string };
 
-  const pickup = "National Stadium, Karachi";
+  const pickup = t("pickup_location"); // Use translation key
 
   // Fare values
   const [fareCount, setFareCount] = useState({
@@ -66,6 +68,12 @@ const ChooseRideScreen: React.FC = () => {
     setCustomVisible(false);
   };
 
+  const rideOptions = [
+    { name: "Motorbike", desc: t("motorbike_desc"), icon: "🛵" },
+    { name: "Car", desc: t("car_desc"), icon: "🚗" },
+    { name: "RickShaw", desc: t("rickshaw_desc"), icon: "🛺" },
+  ];
+
   return (
     <View style={styles.container}>
       {/* MAP */}
@@ -86,17 +94,17 @@ const ChooseRideScreen: React.FC = () => {
             <View style={styles.circleInner} />
           </View>
           <View style={styles.dottedLine} />
-          <Text style={styles.arrow}>➤</Text>
+          <AccessibleText style={styles.arrow}>➤</AccessibleText>
         </View>
 
         <View style={{ flex: 1 }}>
           <View style={styles.inputRow}>
-            <Text style={styles.inputText}>{pickup}</Text>
-            <Text style={styles.plus}>+</Text>
+            <AccessibleText style={styles.inputAccessibleText}>{pickup}</AccessibleText>
+            <AccessibleText style={styles.plus}>+</AccessibleText>
           </View>
 
           <View style={styles.inputRow}>
-            <Text style={styles.inputText}>{destination}</Text>
+            <AccessibleText style={styles.inputAccessibleText}>{destination}</AccessibleText>
           </View>
         </View>
       </View>
@@ -109,7 +117,7 @@ const ChooseRideScreen: React.FC = () => {
       {/* BOTTOM SHEET */}
       <View style={styles.bottomSheet}>
         <View style={styles.sheetHandle} />
-        <Text style={styles.sheetTitle}>Choose a ride</Text>
+        <AccessibleText style={styles.sheetTitle}>{t("sheet_title")}</AccessibleText>
 
         <View style={{ maxHeight: 280 }}>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -124,12 +132,14 @@ const ChooseRideScreen: React.FC = () => {
               >
                 <View style={styles.rideLeft}>
                   <View style={styles.iconPlaceholder}>
-                    <Text style={{ fontSize: 28 }}>{ride.icon}</Text>
+                    <AccessibleText style={{ fontSize: 28 }}>{ride.icon}</AccessibleText>
                   </View>
 
                   <View>
-                    <Text style={styles.rideName}>{ride.name}</Text>
-                    <Text style={styles.rideDesc}>{ride.desc}</Text>
+                    {/* Use translated ride name */}
+                    <AccessibleText style={styles.rideName}>{t(`${ride.name.toLowerCase()}_name`)}</AccessibleText>
+                    {/* Use translated ride description */}
+                    <AccessibleText style={styles.rideDesc}>{ride.desc}</AccessibleText>
                   </View>
                 </View>
 
@@ -165,7 +175,7 @@ const ChooseRideScreen: React.FC = () => {
                                                             fare: fareCount[selectedRide],
                                                           })
                                                         }>
-          <Text style={styles.findRideText}>FIND RIDE</Text>
+          <AccessibleText style={styles.findRideText}>{t("find_ride_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>
 
@@ -173,15 +183,15 @@ const ChooseRideScreen: React.FC = () => {
       {customVisible && (
         <View style={styles.popupOverlay}>
           <View style={styles.popupBox}>
-            <Text style={styles.popupTitle}>Enter Fare</Text>
+            <AccessibleText style={styles.popupTitle}>{t("enter_fare_popup_title")}</AccessibleText>
 
             <View style={styles.popupInputBox}>
-              <TextInput
+              <AccessibleTextInput
                 style={styles.popupInput}
                 value={tempFare}
                 onChangeText={setTempFare}
                 keyboardType="numeric"
-                placeholder="Enter amount"
+                placeholder={t("enter_amount_placeholder")}
                 placeholderTextColor="#777"
               />
             </View>
@@ -191,14 +201,14 @@ const ChooseRideScreen: React.FC = () => {
                 onPress={() => setCustomVisible(false)}
                 style={styles.cancelButton}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <AccessibleText style={styles.cancelText}>{t("cancel_btn")}</AccessibleText>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={applyCustomFare}
                 style={styles.okButton}
               >
-                <Text style={styles.okText}>OK</Text>
+                <AccessibleText style={styles.okText}>{t("ok_btn")}</AccessibleText>
               </TouchableOpacity>
             </View>
           </View>
@@ -209,12 +219,6 @@ const ChooseRideScreen: React.FC = () => {
 };
 
 export default ChooseRideScreen;
-
-const rideOptions = [
-  { name: "Motorbike", desc: "1 Passenger", icon: "🛵" },
-  { name: "Car", desc: "3–4 Passengers", icon: "🚗" },
-  { name: "RickShaw", desc: "3 Passengers", icon: "🛺" },
-];
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

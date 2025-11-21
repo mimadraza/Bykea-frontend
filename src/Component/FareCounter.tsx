@@ -1,7 +1,7 @@
 // src/Component/FareCounter.tsx
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-
+import { View, TouchableOpacity, StyleSheet } from "react-native";
+import AccessibleText from "./AccessibleText"; // Import your wrapper
 interface Props {
   value: number;
   onIncrease: () => void;
@@ -18,16 +18,16 @@ const FareCounter: React.FC<Props> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onDecrease}>
-        <Text style={styles.button}>−</Text>
+        <AccessibleText style={styles.button}>−</AccessibleText>
       </TouchableOpacity>
 
       {/* tap fare to open popup */}
       <TouchableOpacity onPress={onOpenCustom}>
-        <Text style={styles.value}>{value}</Text>
+        <AccessibleText style={styles.value}>{value}</AccessibleText>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onIncrease}>
-        <Text style={styles.button}>+</Text>
+        <AccessibleText style={styles.button}>+</AccessibleText>
       </TouchableOpacity>
     </View>
   );

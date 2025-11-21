@@ -105,6 +105,13 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            // Change this to whatever you want the APK file to be called
+            outputFileName = "Bykea-Redesigned-${variant.name}.apk"
+        }
+    }
+
 }
 
 dependencies {

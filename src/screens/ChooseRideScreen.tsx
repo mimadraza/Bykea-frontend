@@ -1,11 +1,9 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  TextInput,
 } from "react-native";
 
 import { WebView } from "react-native-webview";
@@ -17,7 +15,8 @@ import FareCounter from "../Component/FareCounter";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ChooseRideScreen: React.FC = () => {
@@ -86,17 +85,17 @@ const ChooseRideScreen: React.FC = () => {
             <View style={styles.circleInner} />
           </View>
           <View style={styles.dottedLine} />
-          <Text style={styles.arrow}>➤</Text>
+          <AccessibleText style={styles.arrow}>➤</AccessibleText>
         </View>
 
         <View style={{ flex: 1 }}>
           <View style={styles.inputRow}>
-            <Text style={styles.inputText}>{pickup}</Text>
-            <Text style={styles.plus}>+</Text>
+            <AccessibleText style={styles.inputAccessibleText}>{pickup}</AccessibleText>
+            <AccessibleText style={styles.plus}>+</AccessibleText>
           </View>
 
           <View style={styles.inputRow}>
-            <Text style={styles.inputText}>{destination}</Text>
+            <AccessibleText style={styles.inputAccessibleText}>{destination}</AccessibleText>
           </View>
         </View>
       </View>
@@ -109,7 +108,7 @@ const ChooseRideScreen: React.FC = () => {
       {/* BOTTOM SHEET */}
       <View style={styles.bottomSheet}>
         <View style={styles.sheetHandle} />
-        <Text style={styles.sheetTitle}>Choose a ride</Text>
+        <AccessibleText style={styles.sheetTitle}>Choose a ride</AccessibleText>
 
         <View style={{ maxHeight: 280 }}>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -124,12 +123,12 @@ const ChooseRideScreen: React.FC = () => {
               >
                 <View style={styles.rideLeft}>
                   <View style={styles.iconPlaceholder}>
-                    <Text style={{ fontSize: 28 }}>{ride.icon}</Text>
+                    <AccessibleText style={{ fontSize: 28 }}>{ride.icon}</AccessibleText>
                   </View>
 
                   <View>
-                    <Text style={styles.rideName}>{ride.name}</Text>
-                    <Text style={styles.rideDesc}>{ride.desc}</Text>
+                    <AccessibleText style={styles.rideName}>{ride.name}</AccessibleText>
+                    <AccessibleText style={styles.rideDesc}>{ride.desc}</AccessibleText>
                   </View>
                 </View>
 
@@ -165,7 +164,7 @@ const ChooseRideScreen: React.FC = () => {
                                                             fare: fareCount[selectedRide],
                                                           })
                                                         }>
-          <Text style={styles.findRideText}>FIND RIDE</Text>
+          <AccessibleText style={styles.findRideText}>FIND RIDE</AccessibleText>
         </TouchableOpacity>
       </View>
 
@@ -173,10 +172,10 @@ const ChooseRideScreen: React.FC = () => {
       {customVisible && (
         <View style={styles.popupOverlay}>
           <View style={styles.popupBox}>
-            <Text style={styles.popupTitle}>Enter Fare</Text>
+            <AccessibleText style={styles.popupTitle}>Enter Fare</AccessibleText>
 
             <View style={styles.popupInputBox}>
-              <TextInput
+              <AccessibleTextInput
                 style={styles.popupInput}
                 value={tempFare}
                 onChangeText={setTempFare}
@@ -191,14 +190,14 @@ const ChooseRideScreen: React.FC = () => {
                 onPress={() => setCustomVisible(false)}
                 style={styles.cancelButton}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <AccessibleText style={styles.cancelText}>Cancel</AccessibleText>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={applyCustomFare}
                 style={styles.okButton}
               >
-                <Text style={styles.okText}>OK</Text>
+                <AccessibleText style={styles.okText}>OK</AccessibleText>
               </TouchableOpacity>
             </View>
           </View>

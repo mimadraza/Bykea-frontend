@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
@@ -12,7 +10,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import Logo from "../Component/Logo";
-
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 type NavProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
 export default function LoginScreen() {
@@ -23,9 +22,9 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Logo size={40} style={{ textAlign: "center", marginBottom: 60 }} />
 
-      <Text style={styles.label}>Phone Number</Text>
+      <AccessibleText style={styles.label}>Phone Number</AccessibleText>
 
-      <TextInput
+      <AccessibleTextInput
         style={styles.input}
         keyboardType="phone-pad"
         placeholder="0333229781"
@@ -38,7 +37,7 @@ export default function LoginScreen() {
         style={styles.button}
         onPress={() => navigation.navigate("OTP")}
       >
-        <Text style={styles.buttonText}>LOGIN</Text>
+        <AccessibleText style={styles.buttonText}>LOGIN</AccessibleText>
       </TouchableOpacity>
     </View>
   );

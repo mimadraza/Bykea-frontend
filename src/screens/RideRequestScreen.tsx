@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
@@ -15,7 +14,7 @@ import FareCounter from "../Component/FareCounter";
 import DriverOfferCard, {
   DriverOffer,
 } from "../Component/DriverOfferCard";
-
+import AccessibleText from "../Component/AccessibleText";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
@@ -133,10 +132,10 @@ const RideRequestScreen: React.FC = () => {
 
       {/* BOTTOM RIDE SUMMARY */}
       <View style={styles.bottomCard}>
-        <Text style={styles.rideTitle}>{rideType}</Text>
+        <AccessibleText style={styles.rideTitle}>{rideType}</AccessibleText>
 
         <View style={styles.rideIconWrapper}>
-          <Text style={styles.rideIcon}>{RIDE_META[rideType].icon}</Text>
+          <AccessibleText style={styles.rideIcon}>{RIDE_META[rideType].icon}</AccessibleText>
         </View>
 
         <View style={styles.counterRow}>
@@ -149,14 +148,14 @@ const RideRequestScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity style={styles.keepLookingBtn}>
-          <Text style={styles.keepLookingText}>KEEP LOOKING</Text>
+          <AccessibleText style={styles.keepLookingText}>KEEP LOOKING</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.cancelBtn}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.cancelText}>CANCEL RIDE</Text>
+          <AccessibleText style={styles.cancelText}>CANCEL RIDE</AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

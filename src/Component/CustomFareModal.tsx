@@ -2,12 +2,11 @@
 import React from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
 } from "react-native";
-
+import AccessibleText from "./AccessibleText"; // Import your wrapper
 interface Props {
   visible: boolean;
   value: number;
@@ -29,10 +28,10 @@ const CustomFareModal: React.FC<Props> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalBox}>
-          <Text style={styles.title}>Enter Custom Fare</Text>
+          <AccessibleText style={styles.title}>Enter Custom Fare</AccessibleText>
 
           <View style={styles.fareDisplay}>
-            <Text style={styles.fareText}>PKR {value}</Text>
+            <AccessibleText style={styles.fareAccessibleText}>PKR {value}</AccessibleText>
           </View>
 
           {/* Keypad */}
@@ -44,14 +43,14 @@ const CustomFareModal: React.FC<Props> = ({
                   style={styles.key}
                   onPress={() => onDigitPress(digit)}
                 >
-                  <Text style={styles.keyText}>{digit}</Text>
+                  <AccessibleText style={styles.keyAccessibleText}>{digit}</AccessibleText>
                 </TouchableOpacity>
               )
             )}
 
             {/* Delete Button */}
             <TouchableOpacity style={styles.key} onPress={onDelete}>
-              <Text style={styles.keyText}>⌫</Text>
+              <AccessibleText style={styles.keyAccessibleText}>⌫</AccessibleText>
             </TouchableOpacity>
           </View>
 
@@ -59,11 +58,11 @@ const CustomFareModal: React.FC<Props> = ({
             style={styles.confirmButton}
             onPress={() => onConfirm(value)}
           >
-            <Text style={styles.confirmText}>APPLY FARE</Text>
+            <AccessibleText style={styles.confirmAccessibleText}>APPLY FARE</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onClose}>
-            <Text style={styles.cancelText}>Cancel</Text>
+            <AccessibleText style={styles.cancelAccessibleText}>Cancel</AccessibleText>
           </TouchableOpacity>
         </View>
       </View>

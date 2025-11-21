@@ -2,7 +2,6 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Image,
@@ -11,7 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-
+import AccessibleText from "../Component/AccessibleText";
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ProfileScreen: React.FC = () => {
@@ -20,7 +19,7 @@ const ProfileScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Profile</Text>
+        <AccessibleText style={styles.title}>Profile</AccessibleText>
 
         {/* Avatar */}
         <View style={styles.avatarWrapper}>
@@ -34,8 +33,8 @@ const ProfileScreen: React.FC = () => {
 
         {/* Rating */}
         <View style={styles.ratingRow}>
-          <Text style={styles.star}>⭐</Text>
-          <Text style={styles.rating}>4.95</Text>
+          <AccessibleText style={styles.star}>⭐</AccessibleText>
+          <AccessibleText style={styles.rating}>4.95</AccessibleText>
         </View>
 
         {/* Menu Items */}
@@ -43,21 +42,21 @@ const ProfileScreen: React.FC = () => {
           style={styles.menuRow}
           onPress={() => navigation.navigate("PersonalInfo")}
         >
-          <Text style={styles.menuText}>Personal Information</Text>
-          <Text style={styles.menuIcon}>📄</Text>
+          <AccessibleText style={styles.MenuText}>Personal Information</AccessibleText>
+          <AccessibleText style={styles.menuIcon}>📄</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.menuRow}
           onPress={() => navigation.navigate("SavedPlaces")}
         >
-          <Text style={styles.menuText}>Saved Places</Text>
-          <Text style={styles.menuIcon}>📍</Text>
+          <AccessibleText style={styles.menuText}>Saved Places</AccessibleText>
+          <AccessibleText style={styles.menuIcon}>📍</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuRow}>
-          <Text style={styles.menuText}>Download Data</Text>
-          <Text style={styles.menuIcon}>💾</Text>
+          <AccessibleText style={styles.menuText}>Download Data</AccessibleText>
+          <AccessibleText style={styles.menuIcon}>💾</AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

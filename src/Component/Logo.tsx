@@ -1,6 +1,6 @@
 import React from "react";
-import { Text, StyleSheet, ViewStyle } from "react-native";
-
+import {  StyleSheet, ViewStyle } from "react-native";
+import AccessibleText from "./AccessibleText"; // Import your wrapper
 interface LogoProps {
   size?: number;
   style?: ViewStyle;
@@ -8,9 +8,9 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ size = 48, style }) => {
   return (
-    <Text style={[styles.logo, { fontSize: size }, style]}>
+    <AccessibleText style={[styles.logo, { fontSize: size }, style]}>
       Bykea
-    </Text>
+    </AccessibleText>
   );
 };
 

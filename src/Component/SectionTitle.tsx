@@ -1,8 +1,9 @@
 import React from "react";
 import { Text, StyleSheet } from "react-native";
+import AccessibleText from "./AccessibleText"; // Import your wrapper
 
 const SectionTitle = ({ text }: { text: string }) => {
-  return <Text style={styles.title}>{text}</Text>;
+  return <AccessibleText style={styles.title}>{text}</AccessibleText>;
 };
 
 export default SectionTitle;

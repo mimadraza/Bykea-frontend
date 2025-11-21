@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Animated,
@@ -15,7 +14,7 @@ import Sidebar from "../Component/Sidebar";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-
+import AccessibleText from "../Component/AccessibleText";
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen: React.FC = () => {
@@ -66,16 +65,16 @@ const HomeScreen: React.FC = () => {
           style={styles.largeCard}
           onPress={() => navigation.navigate("Pickup")}
         >
-          <Text style={styles.largeCardTitle}>Ride</Text>
+          <AccessibleText style={styles.largeCardTitle}>Ride</AccessibleText>
         </TouchableOpacity>
 
         <View style={styles.row}>
           <TouchableOpacity style={styles.smallCard}>
-            <Text style={styles.smallCardTitle}>Helpline</Text>
+            <AccessibleText style={styles.smallCardTitle}>Helpline</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.smallCard}>
-            <Text style={styles.smallCardTitle}>Delivery</Text>
+            <AccessibleText style={styles.smallCardTitle}>Delivery</AccessibleText>
           </TouchableOpacity>
         </View>
       </View>

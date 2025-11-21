@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Image,
@@ -15,7 +14,7 @@ import BackButton from "../Component/BackButton";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-
+import AccessibleText from "../Component/AccessibleText";
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RideInProgressScreen: React.FC = () => {
@@ -57,10 +56,10 @@ const RideInProgressScreen: React.FC = () => {
           />
 
           <View style={{ flex: 1 }}>
-            <Text style={styles.statusText}>Rider is on his way</Text>
+            <AccessibleText style={styles.statusText}>Rider is on his way</AccessibleText>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={styles.driverName}>{driver.name}</Text>
-              <Text style={styles.star}>⭐ {driver.rating}</Text>
+              <AccessibleText style={styles.driverName}>{driver.name}</AccessibleText>
+              <AccessibleText style={styles.star}>⭐ {driver.rating}</AccessibleText>
             </View>
           </View>
         </View>
@@ -68,13 +67,13 @@ const RideInProgressScreen: React.FC = () => {
         {/* Share + Contact */}
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>🔄</Text>
-            <Text style={styles.actionText}>Share</Text>
+            <AccessibleText style={styles.actionIcon}>🔄</AccessibleText>
+            <AccessibleText style={styles.actionText}>Share</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionIcon}>📞</Text>
-            <Text style={styles.actionText}>Contact</Text>
+            <AccessibleText style={styles.actionIcon}>📞</AccessibleText>
+            <AccessibleText style={styles.actionText}>Contact</AccessibleText>
           </TouchableOpacity>
         </View>
 
@@ -83,7 +82,7 @@ const RideInProgressScreen: React.FC = () => {
           style={styles.cancelBtn}
           onPress = { () => navigation.navigate("ChooseRide", { destination: "" })}
         >
-          <Text style={styles.cancelText}>CANCEL RIDE</Text>
+          <AccessibleText style={styles.cancelText}>CANCEL RIDE</AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

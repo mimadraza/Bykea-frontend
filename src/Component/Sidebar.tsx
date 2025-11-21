@@ -1,7 +1,6 @@
 import React from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Animated,
@@ -10,7 +9,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-
+import AccessibleText from "./AccessibleText"; // Import your wrapper
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface SidebarProps {
@@ -33,25 +32,25 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
           { transform: [{ translateX: slideAnim }] },
         ]}
       >
-        <Text style={styles.sidebarTitle}>Saad Imam</Text>
+        <AccessibleText style={styles.sidebarTitle}>Saad Imam</AccessibleText>
 
         <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
-          <Text style={styles.sidebarItem}>Profile</Text>
+          <AccessibleText style={styles.sidebarItem}>Profile</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("RideHistory")}>
-          <Text style={styles.sidebarItem}>Booking History</Text>
+          <AccessibleText style={styles.sidebarItem}>Booking History</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("Accessibility")}>
-          <Text style={styles.sidebarItem}>Settings</Text>
+          <AccessibleText style={styles.sidebarItem}>Settings</AccessibleText>
         </TouchableOpacity>
 
-        <Text style={styles.sidebarItem}>Legal</Text>
-        <Text style={styles.sidebarItem}>Accessibility</Text>
+        <AccessibleText style={styles.sidebarItem}>Legal</AccessibleText>
+        <AccessibleText style={styles.sidebarItem}>Accessibility</AccessibleText>
 
         <TouchableOpacity style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <AccessibleText style={styles.logoutAccessibleText}>Logout</AccessibleText>
         </TouchableOpacity>
       </Animated.View>
     </>

@@ -2,8 +2,6 @@
 import React, { useRef, useState } from "react";
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Animated,
@@ -18,7 +16,8 @@ import Sidebar from "../Component/Sidebar";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const PickupScreen: React.FC = () => {
@@ -73,17 +72,17 @@ const PickupScreen: React.FC = () => {
 
           <View style={styles.dottedLine} />
 
-          <Text style={styles.arrow}>➤</Text>
+          <AccessibleText style={styles.arrow}>➤</AccessibleText>
         </View>
 
         <View style={{ flex: 1 }}>
           <View style={styles.inputRow}>
-            <Text style={styles.inputText}>National Stadium, Karachi</Text>
-            <Text style={styles.plus}>+</Text>
+            <AccessibleText style={styles.inputText}>National Stadium, Karachi</AccessibleText>
+            <AccessibleText style={styles.plus}>+</AccessibleText>
           </View>
 
           <View style={styles.inputRow}>
-            <TextInput
+            <AccessibleTextInput
               placeholder="Enter your Destination"
               placeholderTextColor="#777"
               style={styles.destInput}
@@ -92,7 +91,7 @@ const PickupScreen: React.FC = () => {
 
           {/* RECENT LOCATIONS */}
           <View style={styles.recentContainer}>
-            <Text style={styles.recentTitle}>Recent Locations</Text>
+            <AccessibleText style={styles.recentTitle}>Recent Locations</AccessibleText>
 
             {[
               "Iba, University Road, Karachi",
@@ -105,7 +104,7 @@ const PickupScreen: React.FC = () => {
                   navigation.navigate("ChooseRide", { destination: loc })
                 }
               >
-                <Text style={styles.recentItem}>{loc}</Text>
+                <AccessibleText style={styles.recentItem}>{loc}</AccessibleText>
               </TouchableOpacity>
             ))}
           </View>

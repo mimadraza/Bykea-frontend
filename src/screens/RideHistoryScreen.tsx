@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
-  TextInput,
   FlatList,
   Image,
   TouchableOpacity,
 } from "react-native";
-
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 const rideHistoryData = [
   {
     id: "1",
@@ -50,12 +49,12 @@ const RideHistoryScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Ride History</Text>
+        <AccessibleText style={styles.title}>Ride History</AccessibleText>
 
         {/* Search bar */}
         <View style={styles.searchRow}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
+          <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
+          <AccessibleTextInput
             placeholder="Search for booking"
             placeholderTextColor="#aaa"
             style={styles.searchInput}
@@ -78,10 +77,10 @@ const RideHistoryScreen: React.FC = () => {
               />
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeText}>
+                <AccessibleText style={styles.routeText}>
                   {item.from} to {item.to}
-                </Text>
-                <Text style={styles.dateText}>{item.date}</Text>
+                </AccessibleText>
+                <AccessibleText style={styles.dateText}>{item.date}</AccessibleText>
               </View>
 
               <View style={styles.driverRight}>
@@ -89,7 +88,7 @@ const RideHistoryScreen: React.FC = () => {
                   source={require("../assets/user.png")}
                   style={styles.driverImg}
                 />
-                <Text style={styles.driverName}>{item.driver}</Text>
+                <AccessibleText style={styles.driverName}>{item.driver}</AccessibleText>
               </View>
             </TouchableOpacity>
           )}

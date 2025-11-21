@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
@@ -15,10 +14,11 @@ import FareCounter from "../Component/FareCounter";
 import DriverOfferCard, {
   DriverOffer,
 } from "../Component/DriverOfferCard";
-
+import AccessibleText from "../Component/AccessibleText";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import { useTranslation } from "react-i18next"; // Import this
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -38,6 +38,7 @@ const RIDE_META = {
 const RideRequestScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
+  const { t } = useTranslation(); // Get the translate function
 
   const { rideType, fare: initialFare } = route.params as {
     rideType: "Motorbike" | "Car" | "RickShaw";
@@ -60,9 +61,13 @@ const RideRequestScreen: React.FC = () => {
         const random =
           DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
 
+        // We replace the hardcoded ETA text here for translation:
+        const translatedEta = `${random.eta.split(' ')[0]} ${t("driver_offer_eta")}`;
+
         const newOffer: DriverOffer = {
           id: Date.now().toString() + Math.random().toString(16).slice(2),
           ...random,
+          eta: translatedEta,
         };
 
         // sometimes add 2 offers
@@ -75,6 +80,7 @@ const RideRequestScreen: React.FC = () => {
               (Date.now() + 1).toString() +
               Math.random().toString(16).slice(2),
             ...another,
+            eta: `${another.eta.split(' ')[0]} ${t("driver_offer_eta")}`,
           };
           return [...current, newOffer, second];
         }
@@ -98,7 +104,6 @@ const RideRequestScreen: React.FC = () => {
 
     setOffers((prev) => prev.filter((o) => o.id !== offer.id));
   };
-
 
 
   return (
@@ -130,13 +135,15 @@ const RideRequestScreen: React.FC = () => {
       </View>
 
 
-
       {/* BOTTOM RIDE SUMMARY */}
       <View style={styles.bottomCard}>
-        <Text style={styles.rideTitle}>{rideType}</Text>
+        {/* Translate rideType name if needed, assuming the key is already in i18n for the full name */}
+        <AccessibleText style={styles.rideTitle}>
+          {t(`${rideType.toLowerCase()}_name`)}
+        </AccessibleText>
 
         <View style={styles.rideIconWrapper}>
-          <Text style={styles.rideIcon}>{RIDE_META[rideType].icon}</Text>
+          <AccessibleText style={styles.rideIcon}>{RIDE_META[rideType].icon}</AccessibleText>
         </View>
 
         <View style={styles.counterRow}>
@@ -149,14 +156,14 @@ const RideRequestScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity style={styles.keepLookingBtn}>
-          <Text style={styles.keepLookingText}>KEEP LOOKING</Text>
+          <AccessibleText style={styles.keepLookingText}>{t("keep_looking_btn")}</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.cancelBtn}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.cancelText}>CANCEL RIDE</Text>
+          <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

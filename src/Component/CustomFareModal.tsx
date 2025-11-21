@@ -2,11 +2,12 @@
 import React from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
 } from "react-native";
+import AccessibleText from "./AccessibleText";
+import { useTranslation } from "react-i18next"; // 1. Import this
 
 interface Props {
   visible: boolean;
@@ -25,17 +26,18 @@ const CustomFareModal: React.FC<Props> = ({
   onDigitPress,
   onDelete,
 }) => {
+  const { t } = useTranslation(); // 2. Get the translate function
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalBox}>
-          <Text style={styles.title}>Enter Custom Fare</Text>
+          <AccessibleText style={styles.title}>{t("custom_fare_title")}</AccessibleText>
 
           <View style={styles.fareDisplay}>
-            <Text style={styles.fareText}>PKR {value}</Text>
+            <AccessibleText style={styles.fareText}>PKR {value}</AccessibleText>
           </View>
 
-          {/* Keypad */}
+          {/* Keypad remains non-translatable as it contains digits and a delete symbol */}
           <View style={styles.keypad}>
             {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map(
               (digit, index) => (
@@ -44,14 +46,14 @@ const CustomFareModal: React.FC<Props> = ({
                   style={styles.key}
                   onPress={() => onDigitPress(digit)}
                 >
-                  <Text style={styles.keyText}>{digit}</Text>
+                  <AccessibleText style={styles.keyText}>{digit}</AccessibleText>
                 </TouchableOpacity>
               )
             )}
 
             {/* Delete Button */}
             <TouchableOpacity style={styles.key} onPress={onDelete}>
-              <Text style={styles.keyText}>⌫</Text>
+              <AccessibleText style={styles.keyText}>⌫</AccessibleText>
             </TouchableOpacity>
           </View>
 
@@ -59,11 +61,11 @@ const CustomFareModal: React.FC<Props> = ({
             style={styles.confirmButton}
             onPress={() => onConfirm(value)}
           >
-            <Text style={styles.confirmText}>APPLY FARE</Text>
+            <AccessibleText style={styles.confirmText}>{t("apply_fare_btn")}</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onClose}>
-            <Text style={styles.cancelText}>Cancel</Text>
+            <AccessibleText style={styles.cancelText}>{t("cancel_btn")}</AccessibleText>
           </TouchableOpacity>
         </View>
       </View>

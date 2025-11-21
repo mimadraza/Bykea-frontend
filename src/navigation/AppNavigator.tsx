@@ -45,6 +45,7 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen
           name="RideRequest"
           component={RideRequestScreen}
+
           options={{ headerShown: false }}
         />
 

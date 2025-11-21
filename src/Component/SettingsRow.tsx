@@ -1,6 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import ToggleSwitch from "./ToggleSwitch";
+import AccessibleText from "./AccessibleText"; // Import your wrapper
+
 
 interface RowProps {
   title: string;
@@ -23,8 +25,8 @@ const SettingsRow: React.FC<RowProps> = ({
         <View style={styles.iconPlaceholder}>{icon}</View>
 
         <View>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          <AccessibleText style={styles.title}>{title}</AccessibleText>
+          {subtitle && <AccessibleText style={styles.subtitle}>{subtitle}</AccessibleText>}
         </View>
       </View>
 

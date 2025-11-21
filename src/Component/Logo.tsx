@@ -1,5 +1,7 @@
 import React from "react";
-import { Text, StyleSheet, ViewStyle } from "react-native";
+import { StyleSheet, ViewStyle } from "react-native";
+import AccessibleText from "./AccessibleText";
+import { useTranslation } from "react-i18next"; // 1. Import this
 
 interface LogoProps {
   size?: number;
@@ -7,10 +9,11 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 48, style }) => {
+  const { t } = useTranslation(); // 2. Get the translate function
   return (
-    <Text style={[styles.logo, { fontSize: size }, style]}>
-      Bykea
-    </Text>
+    <AccessibleText style={[styles.logo, { fontSize: size }, style]}>
+      {t("logo_text")}
+    </AccessibleText>
   );
 };
 

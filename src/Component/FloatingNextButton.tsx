@@ -1,6 +1,6 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
-
+import { TouchableOpacity, StyleSheet } from "react-native";
+import AccessibleText from "./AccessibleText"; // Import your wrapper
 interface Props {
   onPress: () => void;
 }
@@ -8,7 +8,7 @@ interface Props {
 const FloatingNextButton: React.FC<Props> = ({ onPress }) => {
   return (
     <TouchableOpacity style={styles.btn} onPress={onPress}>
-      <Text style={styles.arrow}>{">"}</Text>
+      <AccessibleText style={styles.arrow}>{">"}</AccessibleText>
     </TouchableOpacity>
   );
 };

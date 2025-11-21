@@ -1,20 +1,44 @@
 // src/screens/PickupScreen.tsx
-import React, { useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from "react-native";
+
 import { WebView } from "react-native-webview";
 import html_script from "./html_script";
+
+import TopBar from "../Component/TopBar";
+import Sidebar from "../Component/Sidebar";
+
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-
-import TopBar from "../Component/TopBar";   // ⬅ USE COMPONENT
-
 const PickupScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
+
+  // SIDEBAR STATE
+  const [open, setOpen] = useState(false);
+  const slideAnim = useState(new Animated.Value(-260))[0];
+
+  const toggleSidebar = () => {
+    const toValue = open ? -260 : 0;
+    setOpen(!open);
+
+    Animated.timing(slideAnim, {
+      toValue,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  };
 
   return (
     <View style={styles.container}>
@@ -29,12 +53,19 @@ const PickupScreen: React.FC = () => {
         mixedContentMode="always"
       />
 
-      {/* 🔥 USE TOPBAR COMPONENT HERE */}
-      <TopBar onMenuPress={() => console.log("Menu clicked")} />
+      {/* TOP BAR */}
+      <TopBar onMenuPress={toggleSidebar} />
 
-      {/* MAIN OVERLAY CARD */}
+      {/* SIDEBAR - ABOVE EVERYTHING */}
+      {open && (
+        <>
+          <TouchableOpacity style={styles.overlay} onPress={toggleSidebar} />
+          <Sidebar slideAnim={slideAnim} onClose={toggleSidebar} />
+        </>
+      )}
+
+      {/* PICKUP CARD – should stay on top of map but BELOW sidebar */}
       <View style={styles.overlayCard}>
-        {/* Location marker column */}
         <View style={styles.markerColumn}>
           <View style={styles.circleOuter}>
             <View style={styles.circleInner} />
@@ -45,13 +76,10 @@ const PickupScreen: React.FC = () => {
           <Text style={styles.arrow}>➤</Text>
         </View>
 
-        {/* Inputs column */}
         <View style={{ flex: 1 }}>
           <View style={styles.inputRow}>
             <Text style={styles.inputText}>National Stadium, Karachi</Text>
-            <TouchableOpacity>
-              <Text style={styles.plus}>+</Text>
-            </TouchableOpacity>
+            <Text style={styles.plus}>+</Text>
           </View>
 
           <View style={styles.inputRow}>
@@ -62,7 +90,7 @@ const PickupScreen: React.FC = () => {
             />
           </View>
 
-          {/* Recent locations */}
+          {/* RECENT LOCATIONS */}
           <View style={styles.recentContainer}>
             <Text style={styles.recentTitle}>Recent Locations</Text>
 
@@ -70,16 +98,17 @@ const PickupScreen: React.FC = () => {
               "Iba, University Road, Karachi",
               "Falcon complex, Siam house",
               "Saima mall, North Nazimabad",
-            ].map((loc, index) => (
+            ].map((loc, i) => (
               <TouchableOpacity
-                key={index}
-                onPress={() => navigation.navigate("ChooseRide", { destination: loc })}
+                key={i}
+                onPress={() =>
+                  navigation.navigate("ChooseRide", { destination: loc })
+                }
               >
                 <Text style={styles.recentItem}>{loc}</Text>
               </TouchableOpacity>
             ))}
           </View>
-
         </View>
       </View>
     </View>
@@ -93,15 +122,28 @@ const styles = StyleSheet.create({
 
   map: {
     position: "absolute",
-    top: 0,
-    left: 0,
     width: "100%",
     height: "100%",
     zIndex: 1,
   },
 
-  // Removed topBar, menuButton, menuLine ⬅ now using component
+  /* DARK OVERLAY */
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    zIndex: 40,
+  },
 
+  /* SIDEBAR (top layer) */
+  sidebar: {
+    zIndex: 50,
+  },
+
+  /* PICKUP CARD */
   overlayCard: {
     position: "absolute",
     top: 90,
@@ -111,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: "rgba(30, 35, 45, 0.98)",
     flexDirection: "row",
-    zIndex: 15,
+    zIndex: 20,
   },
 
   markerColumn: {

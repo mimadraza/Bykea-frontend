@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
+import { useTranslation } from "react-i18next"; // Import this
+
 const rideHistoryData = [
   {
     id: "1",
@@ -40,6 +42,7 @@ const rideHistoryData = [
 ];
 
 const RideHistoryScreen: React.FC = () => {
+  const { t } = useTranslation(); // Get the translate function
   const [search, setSearch] = useState("");
 
   const filtered = rideHistoryData.filter((item) =>
@@ -49,13 +52,13 @@ const RideHistoryScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <AccessibleText style={styles.title}>Ride History</AccessibleText>
+        <AccessibleText style={styles.title}>{t("history_title")}</AccessibleText>
 
         {/* Search bar */}
         <View style={styles.searchRow}>
           <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
           <AccessibleTextInput
-            placeholder="Search for booking"
+            placeholder={t("search_history_placeholder")}
             placeholderTextColor="#aaa"
             style={styles.searchInput}
             value={search}

@@ -17,16 +17,19 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
+import { useTranslation } from "react-i18next"; // Import this
+
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ChooseRideScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
+  const { t } = useTranslation(); // Get the translate function
 
   const route = useRoute();
   const { destination } = route.params as { destination: string };
 
-  const pickup = "National Stadium, Karachi";
+  const pickup = t("pickup_location"); // Use translation key
 
   // Fare values
   const [fareCount, setFareCount] = useState({
@@ -64,6 +67,12 @@ const ChooseRideScreen: React.FC = () => {
     }
     setCustomVisible(false);
   };
+
+  const rideOptions = [
+    { name: "Motorbike", desc: t("motorbike_desc"), icon: "🛵" },
+    { name: "Car", desc: t("car_desc"), icon: "🚗" },
+    { name: "RickShaw", desc: t("rickshaw_desc"), icon: "🛺" },
+  ];
 
   return (
     <View style={styles.container}>
@@ -108,7 +117,7 @@ const ChooseRideScreen: React.FC = () => {
       {/* BOTTOM SHEET */}
       <View style={styles.bottomSheet}>
         <View style={styles.sheetHandle} />
-        <AccessibleText style={styles.sheetTitle}>Choose a ride</AccessibleText>
+        <AccessibleText style={styles.sheetTitle}>{t("sheet_title")}</AccessibleText>
 
         <View style={{ maxHeight: 280 }}>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -127,7 +136,9 @@ const ChooseRideScreen: React.FC = () => {
                   </View>
 
                   <View>
-                    <AccessibleText style={styles.rideName}>{ride.name}</AccessibleText>
+                    {/* Use translated ride name */}
+                    <AccessibleText style={styles.rideName}>{t(`${ride.name.toLowerCase()}_name`)}</AccessibleText>
+                    {/* Use translated ride description */}
                     <AccessibleText style={styles.rideDesc}>{ride.desc}</AccessibleText>
                   </View>
                 </View>
@@ -164,7 +175,7 @@ const ChooseRideScreen: React.FC = () => {
                                                             fare: fareCount[selectedRide],
                                                           })
                                                         }>
-          <AccessibleText style={styles.findRideText}>FIND RIDE</AccessibleText>
+          <AccessibleText style={styles.findRideText}>{t("find_ride_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>
 
@@ -172,7 +183,7 @@ const ChooseRideScreen: React.FC = () => {
       {customVisible && (
         <View style={styles.popupOverlay}>
           <View style={styles.popupBox}>
-            <AccessibleText style={styles.popupTitle}>Enter Fare</AccessibleText>
+            <AccessibleText style={styles.popupTitle}>{t("enter_fare_popup_title")}</AccessibleText>
 
             <View style={styles.popupInputBox}>
               <AccessibleTextInput
@@ -180,7 +191,7 @@ const ChooseRideScreen: React.FC = () => {
                 value={tempFare}
                 onChangeText={setTempFare}
                 keyboardType="numeric"
-                placeholder="Enter amount"
+                placeholder={t("enter_amount_placeholder")}
                 placeholderTextColor="#777"
               />
             </View>
@@ -190,14 +201,14 @@ const ChooseRideScreen: React.FC = () => {
                 onPress={() => setCustomVisible(false)}
                 style={styles.cancelButton}
               >
-                <AccessibleText style={styles.cancelText}>Cancel</AccessibleText>
+                <AccessibleText style={styles.cancelText}>{t("cancel_btn")}</AccessibleText>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={applyCustomFare}
                 style={styles.okButton}
               >
-                <AccessibleText style={styles.okText}>OK</AccessibleText>
+                <AccessibleText style={styles.okText}>{t("ok_btn")}</AccessibleText>
               </TouchableOpacity>
             </View>
           </View>
@@ -208,12 +219,6 @@ const ChooseRideScreen: React.FC = () => {
 };
 
 export default ChooseRideScreen;
-
-const rideOptions = [
-  { name: "Motorbike", desc: "1 Passenger", icon: "🛵" },
-  { name: "Car", desc: "3–4 Passengers", icon: "🚗" },
-  { name: "RickShaw", desc: "3 Passengers", icon: "🛺" },
-];
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

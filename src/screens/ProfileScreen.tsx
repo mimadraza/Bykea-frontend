@@ -11,15 +11,18 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
+import { useTranslation } from "react-i18next"; // Import this
+
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
+  const { t } = useTranslation(); // Get the translate function
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <AccessibleText style={styles.title}>Profile</AccessibleText>
+        <AccessibleText style={styles.title}>{t("profile_title")}</AccessibleText>
 
         {/* Avatar */}
         <View style={styles.avatarWrapper}>
@@ -42,7 +45,7 @@ const ProfileScreen: React.FC = () => {
           style={styles.menuRow}
           onPress={() => navigation.navigate("PersonalInfo")}
         >
-          <AccessibleText style={styles.MenuText}>Personal Information</AccessibleText>
+          <AccessibleText style={styles.menuText}>{t("personal_info_menu")}</AccessibleText>
           <AccessibleText style={styles.menuIcon}>📄</AccessibleText>
         </TouchableOpacity>
 
@@ -50,12 +53,12 @@ const ProfileScreen: React.FC = () => {
           style={styles.menuRow}
           onPress={() => navigation.navigate("SavedPlaces")}
         >
-          <AccessibleText style={styles.menuText}>Saved Places</AccessibleText>
+          <AccessibleText style={styles.menuText}>{t("saved_places_menu")}</AccessibleText>
           <AccessibleText style={styles.menuIcon}>📍</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuRow}>
-          <AccessibleText style={styles.menuText}>Download Data</AccessibleText>
+          <AccessibleText style={styles.menuText}>{t("download_data_menu")}</AccessibleText>
           <AccessibleText style={styles.menuIcon}>💾</AccessibleText>
         </TouchableOpacity>
       </View>

@@ -6,7 +6,9 @@ import {
   StyleSheet,
   Modal,
 } from "react-native";
-import AccessibleText from "./AccessibleText"; // Import your wrapper
+import AccessibleText from "./AccessibleText";
+import { useTranslation } from "react-i18next"; // 1. Import this
+
 interface Props {
   visible: boolean;
   value: number;
@@ -24,17 +26,18 @@ const CustomFareModal: React.FC<Props> = ({
   onDigitPress,
   onDelete,
 }) => {
+  const { t } = useTranslation(); // 2. Get the translate function
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalBox}>
-          <AccessibleText style={styles.title}>Enter Custom Fare</AccessibleText>
+          <AccessibleText style={styles.title}>{t("custom_fare_title")}</AccessibleText>
 
           <View style={styles.fareDisplay}>
-            <AccessibleText style={styles.fareAccessibleText}>PKR {value}</AccessibleText>
+            <AccessibleText style={styles.fareText}>PKR {value}</AccessibleText>
           </View>
 
-          {/* Keypad */}
+          {/* Keypad remains non-translatable as it contains digits and a delete symbol */}
           <View style={styles.keypad}>
             {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map(
               (digit, index) => (
@@ -43,14 +46,14 @@ const CustomFareModal: React.FC<Props> = ({
                   style={styles.key}
                   onPress={() => onDigitPress(digit)}
                 >
-                  <AccessibleText style={styles.keyAccessibleText}>{digit}</AccessibleText>
+                  <AccessibleText style={styles.keyText}>{digit}</AccessibleText>
                 </TouchableOpacity>
               )
             )}
 
             {/* Delete Button */}
             <TouchableOpacity style={styles.key} onPress={onDelete}>
-              <AccessibleText style={styles.keyAccessibleText}>⌫</AccessibleText>
+              <AccessibleText style={styles.keyText}>⌫</AccessibleText>
             </TouchableOpacity>
           </View>
 
@@ -58,11 +61,11 @@ const CustomFareModal: React.FC<Props> = ({
             style={styles.confirmButton}
             onPress={() => onConfirm(value)}
           >
-            <AccessibleText style={styles.confirmAccessibleText}>APPLY FARE</AccessibleText>
+            <AccessibleText style={styles.confirmText}>{t("apply_fare_btn")}</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onClose}>
-            <AccessibleText style={styles.cancelAccessibleText}>Cancel</AccessibleText>
+            <AccessibleText style={styles.cancelText}>{t("cancel_btn")}</AccessibleText>
           </TouchableOpacity>
         </View>
       </View>

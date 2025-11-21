@@ -7,6 +7,8 @@ import {
 
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next"; // Import this
+
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import Logo from "../Component/Logo";
@@ -16,13 +18,14 @@ type NavProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavProp>();
+  const { t } = useTranslation(); // Get the translate function
   const [phone, setPhone] = useState("");
 
   return (
     <View style={styles.container}>
       <Logo size={40} style={{ textAlign: "center", marginBottom: 60 }} />
 
-      <AccessibleText style={styles.label}>Phone Number</AccessibleText>
+      <AccessibleText style={styles.label}>{t("phone_label")}</AccessibleText>
 
       <AccessibleTextInput
         style={styles.input}
@@ -37,7 +40,7 @@ export default function LoginScreen() {
         style={styles.button}
         onPress={() => navigation.navigate("OTP")}
       >
-        <AccessibleText style={styles.buttonText}>LOGIN</AccessibleText>
+        <AccessibleText style={styles.buttonText}>{t("login_btn")}</AccessibleText>
       </TouchableOpacity>
     </View>
   );

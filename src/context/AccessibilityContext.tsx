@@ -1,28 +1,47 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import i18n from '../i18n/i18n'; // Import i18n instance
 
-// Define the shape of the context
 type AccessibilityContextType = {
   largeText: boolean;
   setLargeText: (value: boolean) => void;
-  fontSizeMultiplier: number; // 1.0 for normal, 1.3 (or higher) for large
+  fontSizeMultiplier: number;
+
+  // Add Urdu Support
+  isUrdu: boolean;
+  toggleUrdu: () => void;
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
 
 export const AccessibilityProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [largeText, setLargeText] = useState(false);
+  const [isUrdu, setIsUrdu] = useState(false);
 
-  // If largeText is true, multiply fonts by 1.3, otherwise 1.0
   const fontSizeMultiplier = largeText ? 1.3 : 1.0;
 
+  // Function to toggle language
+  const toggleUrdu = () => {
+    const newValue = !isUrdu;
+    setIsUrdu(newValue);
+    // Tell i18n to change the language
+    i18n.changeLanguage(newValue ? 'ur' : 'en');
+  };
+
   return (
-    <AccessibilityContext.Provider value={{ largeText, setLargeText, fontSizeMultiplier }}>
+    <AccessibilityContext.Provider
+      value={{
+        largeText,
+        setLargeText,
+        fontSizeMultiplier,
+        isUrdu,
+        toggleUrdu
+      }}
+    >
       {children}
     </AccessibilityContext.Provider>
   );
 };
 
-// Custom hook to use the context easily
 export const useAccessibility = () => {
   const context = useContext(AccessibilityContext);
   if (!context) {

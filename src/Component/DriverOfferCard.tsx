@@ -1,7 +1,9 @@
 // src/Component/DriverOfferCard.tsx
 import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
-import AccessibleText from "./AccessibleText"; // Import your wrapper
+import AccessibleText from "./AccessibleText";
+import { useTranslation } from "react-i18next"; // 1. Import this
+
 export interface DriverOffer {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ interface Props {
 }
 
 const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
+  const { t } = useTranslation(); // 2. Get the translate function
   return (
     <View style={styles.card}>
       {/* Avatar */}
@@ -45,10 +48,10 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
       {/* Buttons */}
       <View style={styles.btnCol}>
         <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
-          <AccessibleText style={styles.acceptAccessibleText}>Accept</AccessibleText>
+          <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
-          <AccessibleText style={styles.rejectAccessibleText}>Reject</AccessibleText>
+          <AccessibleText style={styles.rejectText}>{t("reject_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

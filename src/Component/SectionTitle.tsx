@@ -1,6 +1,8 @@
+// This file is fine as is, since the translation is done by the parent screen (AccessibilityScreen.tsx).
+// The prop `text` is already being passed as `t("vision")`, etc.
 import React from "react";
 import { Text, StyleSheet } from "react-native";
-import AccessibleText from "./AccessibleText"; // Import your wrapper
+import AccessibleText from "./AccessibleText";
 
 const SectionTitle = ({ text }: { text: string }) => {
   return <AccessibleText style={styles.title}>{text}</AccessibleText>;

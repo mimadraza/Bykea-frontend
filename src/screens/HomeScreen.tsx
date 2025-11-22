@@ -9,19 +9,21 @@ import { WebView } from "react-native-webview";
 
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useTranslation } from "react-i18next"; // 1. Import this
+import { useTranslation } from "react-i18next";
 
 import html_script from "./html_script";
 import TopBar from "../Component/TopBar";
 import Sidebar from "../Component/Sidebar";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // 2. Get the translate function
+  const { t } = useTranslation();
+  const { colors, borderWidth } = useAccessibility(); // Get colors
   const mapRef = useRef<WebView>(null);
 
   // SIDEBAR STATE
@@ -61,35 +63,54 @@ const HomeScreen: React.FC = () => {
       )}
 
       {/* BOTTOM UI */}
-      <View style={styles.middleContainer} />
+      <View style={[styles.middleContainer, { backgroundColor: colors.sheetBackground }]} />
 
       <View style={styles.overlayButtons}>
-        <TouchableOpacity
-          style={styles.largeCard}
-          onPress={() => navigation.navigate("Pickup")}
-        >
-          {/* 3. Replace hardcoded string with t("key") */}
-          <AccessibleText style={styles.largeCardTitle}>
-            {t("ride_card_title")}
-          </AccessibleText>
-        </TouchableOpacity>
-
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.smallCard} onPress={() => navigation.navigate("Helpline")}>
-            {/* 3. Replace hardcoded string with t("key") */}
-            <AccessibleText style={styles.smallCardTitle}>
-              {t("helpline_card_title")}
+          <TouchableOpacity
+            style={[
+              styles.largeCard,
+              {
+                backgroundColor: colors.cardBackground,
+                // Add border for visibility in High Contrast mode
+                borderColor: colors.border,
+                borderWidth: borderWidth
+              }
+            ]}
+            onPress={() => navigation.navigate("Pickup")}
+          >
+            <AccessibleText style={styles.largeCardTitle}>
+              {t("ride_card_title")}
             </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.smallCard}>
-            {/* 3. Replace hardcoded string with t("key") */}
-            <AccessibleText style={styles.smallCardTitle}>
-              {t("delivery_card_title")}
-            </AccessibleText>
-          </TouchableOpacity>
+          <View style={styles.row}>
+            <TouchableOpacity style={[
+              styles.smallCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: borderWidth
+              }
+            ]}>
+              <AccessibleText style={styles.smallCardTitle}>
+                {t("helpline_card_title")}
+              </AccessibleText>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[
+              styles.smallCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: borderWidth
+              }
+            ]}>
+              <AccessibleText style={styles.smallCardTitle}>
+                {t("delivery_card_title")}
+              </AccessibleText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
     </View>
   );
 };
@@ -113,7 +134,7 @@ const styles = StyleSheet.create({
     height: "60%",
     borderRadius: 20,
     zIndex: 10,
-    backgroundColor: "rgba(30,35,45,1)",
+    // backgroundColor: "rgba(30,35,45,1)", // Removed hardcoded color
   },
 
   overlayButtons: {
@@ -127,7 +148,7 @@ const styles = StyleSheet.create({
   largeCard: {
     width: "100%",
     height: 140,
-    backgroundColor: "rgba(68,72,75,0.95)",
+    // backgroundColor: "rgba(68,72,75,0.95)", // Removed hardcoded color
     borderRadius: 20,
     marginBottom: 20,
     justifyContent: "center",
@@ -137,7 +158,7 @@ const styles = StyleSheet.create({
   largeCardTitle: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "white",
+    // color: "white", // Handled by AccessibleText default
   },
 
   row: {
@@ -148,7 +169,7 @@ const styles = StyleSheet.create({
   smallCard: {
     width: "48%",
     height: 120,
-    backgroundColor: "rgba(68,72,75,0.95)",
+    // backgroundColor: "rgba(68,72,75,0.95)", // Removed hardcoded color
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
@@ -157,6 +178,6 @@ const styles = StyleSheet.create({
   smallCardTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "white",
+    // color: "white", // Handled by AccessibleText default
   },
 });

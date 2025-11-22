@@ -2,7 +2,6 @@ import React from "react";
 import { TextInput, TextInputProps, StyleSheet, TextStyle } from "react-native";
 import { useAccessibility } from "../context/AccessibilityContext";
 
-// It accepts all standard TextInput properties (placeholder, onChangeText, etc.)
 interface AccessibleTextInputProps extends TextInputProps {
   style?: TextStyle | TextStyle[];
 }
@@ -11,20 +10,40 @@ const AccessibleTextInput: React.FC<AccessibleTextInputProps> = ({
   style,
   ...props
 }) => {
-  const { fontSizeMultiplier } = useAccessibility();
+  // 1. Get highContrast boolean too
+  const { fontSizeMultiplier, colors, borderWidth, highContrast } = useAccessibility();
 
-  // 1. Get the original font size defined in your styles (or default to 14)
   const flatStyle = StyleSheet.flatten(style || {});
   const baseFontSize = flatStyle.fontSize || 14;
-
-  // 2. Calculate the zoomed size
   const newFontSize = baseFontSize * fontSizeMultiplier;
+  const textColor = flatStyle.color || colors.text;
 
   return (
     <TextInput
       {...props}
-      // 3. Apply styles, overwriting fontSize with the calculated one
-      style={[style, { fontSize: newFontSize }]}
+      style={[
+        // 2. Base Defaults (So inputs always have a boundary)
+        {
+          borderColor: colors.border,
+          borderWidth: 1, // Default thin border
+          backgroundColor: colors.inputBackground
+        },
+
+        // 3. The styles passed from your screens (allows overriding normal state)
+        style,
+
+        // 4. High Contrast Enforcement
+        // If High Contrast is ON, we FORCE the thick border and color,
+        // overriding any specific screen styles to guarantee visibility.
+        highContrast && {
+          borderColor: colors.border,
+          borderWidth: borderWidth, // This will be 3px
+        },
+
+        // 5. Text Sizing & Color (Always Applied)
+        { fontSize: newFontSize, color: textColor }
+      ]}
+      placeholderTextColor={props.placeholderTextColor || colors.textSecondary}
     />
   );
 };

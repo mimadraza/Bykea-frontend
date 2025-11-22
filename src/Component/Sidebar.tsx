@@ -10,7 +10,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next"; // 1. Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -21,7 +22,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // 2. Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
 
   return (
     <>
@@ -32,26 +34,30 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
       <Animated.View
         style={[
           styles.sidebar,
-          { transform: [{ translateX: slideAnim }] },
+          {
+            transform: [{ translateX: slideAnim }],
+            backgroundColor: colors.sidebarBackground, // Use theme color
+          },
         ]}
       >
         <AccessibleText style={styles.sidebarTitle}>{t("user_name")}</AccessibleText>
 
         <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
-          <AccessibleText style={styles.sidebarItem}>{t("sidebar_profile")}</AccessibleText>
+          <AccessibleText style={[styles.sidebarItem, { color: colors.textSecondary }]}>{t("sidebar_profile")}</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("RideHistory")}>
-          <AccessibleText style={styles.sidebarItem}>{t("sidebar_history")}</AccessibleText>
+          <AccessibleText style={[styles.sidebarItem, { color: colors.textSecondary }]}>{t("sidebar_history")}</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("Accessibility")}>
-          <AccessibleText style={styles.sidebarItem}>{t("sidebar_settings")}</AccessibleText>
+          <AccessibleText style={[styles.sidebarItem, { color: colors.textSecondary }]}>{t("sidebar_settings")}</AccessibleText>
         </TouchableOpacity>
 
-        <AccessibleText style={styles.sidebarItem}>{t("sidebar_legal")}</AccessibleText>
-        <AccessibleText style={styles.sidebarItem}>{t("sidebar_accessibility")}</AccessibleText>
+        <AccessibleText style={[styles.sidebarItem, { color: colors.textSecondary }]}>{t("sidebar_legal")}</AccessibleText>
+        <AccessibleText style={[styles.sidebarItem, { color: colors.textSecondary }]}>{t("sidebar_accessibility")}</AccessibleText>
 
+        {/* Keeping logout button red for standard warning/action color */}
         <TouchableOpacity style={styles.logoutBtn}>
           <AccessibleText style={styles.logoutText}>{t("sidebar_logout")}</AccessibleText>
         </TouchableOpacity>
@@ -79,21 +85,21 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: 260,
-    backgroundColor: "rgba(20,20,20,0.95)",
+    // backgroundColor: "rgba(20,20,20,0.95)", // Removed hardcoded color
     paddingTop: 70,
     paddingHorizontal: 20,
     zIndex: 50,
   },
 
   sidebarTitle: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText default
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 20,
   },
 
   sidebarItem: {
-    color: "#ddd",
+    // color: "#ddd", // Removed hardcoded color
     fontSize: 17,
     marginVertical: 10,
   },
@@ -102,7 +108,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: "#ff4444",
+    backgroundColor: "#ff4444", // Keeping red for destructive action
   },
 
   logoutText: {

@@ -17,19 +17,21 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ChooseRideScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
 
   const route = useRoute();
   const { destination } = route.params as { destination: string };
 
-  const pickup = t("pickup_location"); // Use translation key
+  const pickup = t("pickup_location");
 
   // Fare values
   const [fareCount, setFareCount] = useState({
@@ -88,23 +90,26 @@ const ChooseRideScreen: React.FC = () => {
       />
 
       {/* LOCATION BOX */}
-      <View style={styles.locationCard}>
+      <View style={[styles.locationCard, { backgroundColor: colors.cardBackground }]}>
         <View style={styles.markerColumn}>
-          <View style={styles.circleOuter}>
-            <View style={styles.circleInner} />
+          {/* Pickup location marker */}
+          <View style={[styles.circleOuter, { borderColor: colors.text }]}>
+            <View style={[styles.circleInner, { backgroundColor: colors.text }]} />
           </View>
-          <View style={styles.dottedLine} />
-          <AccessibleText style={styles.arrow}>➤</AccessibleText>
+          {/* Dotted line (Keeping color same for route) */}
+          <View style={[styles.dottedLine, { backgroundColor: colors.accent }]} />
+          {/* Destination arrow (Keeping color same for route) */}
+          <AccessibleText style={[styles.arrow, { color: colors.accent }]}>➤</AccessibleText>
         </View>
 
         <View style={{ flex: 1 }}>
-          <View style={styles.inputRow}>
-            <AccessibleText style={styles.inputAccessibleText}>{pickup}</AccessibleText>
-            <AccessibleText style={styles.plus}>+</AccessibleText>
+          <View style={[styles.inputRow, { backgroundColor: colors.inputBackground }]}>
+            <AccessibleText style={styles.inputText}>{pickup}</AccessibleText>
+            <AccessibleText style={[styles.plus, { color: colors.primary }]}>+</AccessibleText>
           </View>
 
-          <View style={styles.inputRow}>
-            <AccessibleText style={styles.inputAccessibleText}>{destination}</AccessibleText>
+          <View style={[styles.inputRow, { backgroundColor: colors.inputBackground }]}>
+            <AccessibleText style={styles.inputText}>{destination}</AccessibleText>
           </View>
         </View>
       </View>
@@ -115,8 +120,8 @@ const ChooseRideScreen: React.FC = () => {
       </View>
 
       {/* BOTTOM SHEET */}
-      <View style={styles.bottomSheet}>
-        <View style={styles.sheetHandle} />
+      <View style={[styles.bottomSheet, { backgroundColor: colors.sheetBackground }]}>
+        <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
         <AccessibleText style={styles.sheetTitle}>{t("sheet_title")}</AccessibleText>
 
         <View style={{ maxHeight: 280 }}>
@@ -126,20 +131,22 @@ const ChooseRideScreen: React.FC = () => {
                 key={ride.name}
                 style={[
                   styles.rideCard,
-                  selectedRide === ride.name && styles.rideCardSelected,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: selectedRide === ride.name ? colors.primary : "transparent",
+                  },
+                  selectedRide === ride.name && [styles.rideCardSelected, { shadowColor: colors.primary }],
                 ]}
                 onPress={() => setSelectedRide(ride.name)}
               >
                 <View style={styles.rideLeft}>
-                  <View style={styles.iconPlaceholder}>
+                  <View style={[styles.iconPlaceholder, { backgroundColor: colors.buttonBackground }]}>
                     <AccessibleText style={{ fontSize: 28 }}>{ride.icon}</AccessibleText>
                   </View>
 
                   <View>
-                    {/* Use translated ride name */}
                     <AccessibleText style={styles.rideName}>{t(`${ride.name.toLowerCase()}_name`)}</AccessibleText>
-                    {/* Use translated ride description */}
-                    <AccessibleText style={styles.rideDesc}>{ride.desc}</AccessibleText>
+                    <AccessibleText style={[styles.rideDesc, { color: colors.textSecondary }]}>{ride.desc}</AccessibleText>
                   </View>
                 </View>
 
@@ -169,7 +176,7 @@ const ChooseRideScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        <TouchableOpacity style={styles.findRideButton} onPress={() =>
+        <TouchableOpacity style={[styles.findRideButton, { backgroundColor: colors.primary }]} onPress={() =>
                                                           navigation.navigate("RideRequest", {
                                                             rideType: selectedRide,
                                                             fare: fareCount[selectedRide],
@@ -182,17 +189,17 @@ const ChooseRideScreen: React.FC = () => {
       {/* SIMPLE CUSTOM FARE POPUP */}
       {customVisible && (
         <View style={styles.popupOverlay}>
-          <View style={styles.popupBox}>
+          <View style={[styles.popupBox, { backgroundColor: colors.cardBackground }]}>
             <AccessibleText style={styles.popupTitle}>{t("enter_fare_popup_title")}</AccessibleText>
 
-            <View style={styles.popupInputBox}>
+            <View style={[styles.popupInputBox, { backgroundColor: colors.inputBackground }]}>
               <AccessibleTextInput
                 style={styles.popupInput}
                 value={tempFare}
                 onChangeText={setTempFare}
                 keyboardType="numeric"
                 placeholder={t("enter_amount_placeholder")}
-                placeholderTextColor="#777"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
 
@@ -201,12 +208,12 @@ const ChooseRideScreen: React.FC = () => {
                 onPress={() => setCustomVisible(false)}
                 style={styles.cancelButton}
               >
-                <AccessibleText style={styles.cancelText}>{t("cancel_btn")}</AccessibleText>
+                <AccessibleText style={[styles.cancelText, { color: colors.textSecondary }]}>{t("cancel_btn")}</AccessibleText>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={applyCustomFare}
-                style={styles.okButton}
+                style={[styles.okButton, { backgroundColor: colors.primary }]}
               >
                 <AccessibleText style={styles.okText}>{t("ok_btn")}</AccessibleText>
               </TouchableOpacity>
@@ -242,7 +249,7 @@ const styles = StyleSheet.create({
     top: 10,
     left: 15,
     right: 15,
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     padding: 18,
     borderRadius: 22,
     flexDirection: "row",
@@ -259,7 +266,7 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: "#fff",
+    // borderColor: "#fff", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
   },
@@ -268,20 +275,23 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff", // Removed hardcoded color
   },
 
   dottedLine: {
     width: 2,
     height: 50,
-    backgroundColor: "#ffc107",
+    // backgroundColor: "#ffc107", // Removed hardcoded color
     marginVertical: 6,
   },
 
-  arrow: { fontSize: 20, color: "#ffc107" },
+  arrow: {
+    fontSize: 20,
+    // color: "#ffc107" // Removed hardcoded color
+  },
 
   inputRow: {
-    backgroundColor: "#2c333d",
+    // backgroundColor: "#2c333d", // Removed hardcoded color
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -291,15 +301,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  inputText: { color: "white", fontSize: 15, flex: 1 },
+  inputText: {
+    // color: "white", // Handled by AccessibleText default
+    fontSize: 15,
+    flex: 1
+  },
 
-  plus: { color: "#3dff73", fontSize: 22, fontWeight: "bold" },
+  plus: {
+    // color: "#3dff73", // Removed hardcoded color
+    fontSize: 22,
+    fontWeight: "bold"
+  },
 
   bottomSheet: {
     position: "absolute",
     bottom: 0,
     width: "100%",
-    backgroundColor: "#25282B",
+    // backgroundColor: "#25282B", // Removed hardcoded color
     padding: 20,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
@@ -311,14 +329,14 @@ const styles = StyleSheet.create({
   sheetHandle: {
     width: 60,
     height: 5,
-    backgroundColor: "#555",
+    // backgroundColor: "#555", // Removed hardcoded color
     borderRadius: 3,
     alignSelf: "center",
     marginBottom: 15,
   },
 
   sheetTitle: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText default
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 16,
@@ -327,7 +345,7 @@ const styles = StyleSheet.create({
   rideCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2F3338",
+    // backgroundColor: "#2F3338", // Removed hardcoded color
     padding: 16,
     borderRadius: 16,
     justifyContent: "space-between",
@@ -337,8 +355,8 @@ const styles = StyleSheet.create({
   },
 
   rideCardSelected: {
-    borderColor: "#3dff73",
-    shadowColor: "#3dff73",
+    // borderColor: "#3dff73", // Handled inline
+    // shadowColor: "#3dff73", // Handled inline
     shadowOpacity: 0.4,
     shadowRadius: 10,
   },
@@ -349,25 +367,32 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#1E1F22",
+    // backgroundColor: "#1E1F22", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
   },
 
-  rideName: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  rideName: {
+    // color: "#fff", // Handled by AccessibleText default
+    fontSize: 17,
+    fontWeight: "700"
+  },
 
-  rideDesc: { color: "#999", fontSize: 13 },
+  rideDesc: {
+    // color: "#999", // Removed hardcoded color
+    fontSize: 13
+  },
 
   findRideButton: {
-    backgroundColor: "#3dff73",
+    // backgroundColor: "#3dff73", // Removed hardcoded color
     paddingVertical: 18,
     borderRadius: 14,
     marginTop: 10,
   },
 
   findRideText: {
-    color: "#1A1A1A",
+    color: "#1A1A1A", // Keeping dark for contrast against primary
     fontSize: 18,
     fontWeight: "800",
     textAlign: "center",
@@ -388,14 +413,14 @@ const styles = StyleSheet.create({
 
   popupBox: {
     width: "75%",
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     borderRadius: 16,
     padding: 20,
     alignItems: "center",
   },
 
   popupTitle: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText default
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 12,
@@ -403,7 +428,7 @@ const styles = StyleSheet.create({
 
   popupInputBox: {
     width: "100%",
-    backgroundColor: "#2c333d",
+    // backgroundColor: "#2c333d", // Removed hardcoded color
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -411,7 +436,7 @@ const styles = StyleSheet.create({
   },
 
   popupInput: {
-    color: "white",
+    // color: "white", // Handled by AccessibleTextInput
     fontSize: 16,
     paddingVertical: 6,
   },
@@ -430,19 +455,19 @@ const styles = StyleSheet.create({
   },
 
   cancelText: {
-    color: "#bbb",
+    // color: "#bbb", // Removed hardcoded color
     fontSize: 16,
   },
 
   okButton: {
-    backgroundColor: "#3dff73",
+    // backgroundColor: "#3dff73", // Removed hardcoded color
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
   },
 
   okText: {
-    color: "#1A1A1A",
+    color: "#1A1A1A", // Keeping dark for contrast against primary
     fontWeight: "700",
     fontSize: 16,
   },

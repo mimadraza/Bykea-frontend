@@ -15,14 +15,16 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RideInProgressScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
 
   const route = useRoute();
   const { driver } = route.params as {
@@ -50,9 +52,9 @@ const RideInProgressScreen: React.FC = () => {
 
 
       {/* BOTTOM CARD */}
-      <View style={styles.bottomCard}>
+      <View style={[styles.bottomCard, { backgroundColor: colors.sheetBackground }]}>
         {/* Driver Header */}
-        <View style={styles.driverRow}>
+        <View style={[styles.driverRow, { backgroundColor: colors.cardBackground }]}>
           <Image
             source={require("../assets/user.png")}
             style={styles.driverImg}
@@ -61,22 +63,22 @@ const RideInProgressScreen: React.FC = () => {
           <View style={{ flex: 1 }}>
             <AccessibleText style={styles.statusText}>{t("status_on_way")}</AccessibleText>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <AccessibleText style={styles.driverName}>{driver.name}</AccessibleText>
+              <AccessibleText style={[styles.driverName, { color: colors.textSecondary }]}>{driver.name}</AccessibleText>
               <AccessibleText style={styles.star}>⭐ {driver.rating}</AccessibleText>
             </View>
           </View>
         </View>
 
         {/* Share + Contact */}
-        <View style={styles.actionRow}>
+        <View style={[styles.actionRow, { backgroundColor: colors.cardBackground }]}>
           <TouchableOpacity style={styles.actionBtn}>
             <AccessibleText style={styles.actionIcon}>🔄</AccessibleText>
-            <AccessibleText style={styles.actionText}>{t("action_share")}</AccessibleText>
+            <AccessibleText style={[styles.actionText, { color: colors.textSecondary }]}>{t("action_share")}</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionBtn}>
             <AccessibleText style={styles.actionIcon}>📞</AccessibleText>
-            <AccessibleText style={styles.actionText}>{t("action_contact")}</AccessibleText>
+            <AccessibleText style={[styles.actionText, { color: colors.textSecondary }]}>{t("action_contact")}</AccessibleText>
           </TouchableOpacity>
         </View>
 
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 20,
     paddingTop: 30,
-    backgroundColor: "#25282B",
+    // backgroundColor: "#25282B", // Removed hardcoded color
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     zIndex: 50,
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
   driverRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     padding: 14,
     borderRadius: 18,
     marginBottom: 20,
@@ -140,24 +142,24 @@ const styles = StyleSheet.create({
   },
 
   statusText: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText
     fontSize: 18,
     fontWeight: "700",
   },
 
   driverName: {
-    color: "#ddd",
+    // color: "#ddd", // Removed hardcoded color
     fontSize: 14,
   },
 
   star: {
-    color: "#FFD700",
+    color: "#FFD700", // Keeping hardcoded for star color
     fontWeight: "700",
     marginLeft: 6,
   },
 
   actionRow: {
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     borderRadius: 18,
     padding: 20,
     flexDirection: "row",
@@ -172,16 +174,16 @@ const styles = StyleSheet.create({
   actionIcon: {
     fontSize: 28,
     marginBottom: 6,
-    color: "white",
+    // color: "white", // Handled by AccessibleText
   },
 
   actionText: {
-    color: "#ccc",
+    // color: "#ccc", // Removed hardcoded color
     fontSize: 13,
   },
 
   cancelBtn: {
-    backgroundColor: "#D62828",
+    backgroundColor: "#D62828", // Keeping red for cancel/danger action
     paddingVertical: 16,
     borderRadius: 12,
   },

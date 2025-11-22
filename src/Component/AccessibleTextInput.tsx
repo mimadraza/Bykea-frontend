@@ -11,7 +11,7 @@ const AccessibleTextInput: React.FC<AccessibleTextInputProps> = ({
   style,
   ...props
 }) => {
-  const { fontSizeMultiplier } = useAccessibility();
+  const { fontSizeMultiplier, colors } = useAccessibility(); // Get colors
 
   // 1. Get the original font size defined in your styles (or default to 14)
   const flatStyle = StyleSheet.flatten(style || {});
@@ -20,11 +20,16 @@ const AccessibleTextInput: React.FC<AccessibleTextInputProps> = ({
   // 2. Calculate the zoomed size
   const newFontSize = baseFontSize * fontSizeMultiplier;
 
+  // 3. Apply theme text color if no specific color is set in style
+  const textColor = flatStyle.color || colors.text;
+
   return (
     <TextInput
       {...props}
-      // 3. Apply styles, overwriting fontSize with the calculated one
-      style={[style, { fontSize: newFontSize }]}
+      // 4. Apply styles, overwriting fontSize and color with the calculated/themed ones
+      style={[style, { fontSize: newFontSize, color: textColor }]}
+      // Update placeholderTextColor to ensure readability against dynamic background
+      placeholderTextColor={props.placeholderTextColor || colors.textSecondary}
     />
   );
 };

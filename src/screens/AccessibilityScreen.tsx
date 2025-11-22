@@ -11,6 +11,8 @@ import FloatingNextButton from "../Component/FloatingNextButton";
 
 import { useAccessibility } from "../context/AccessibilityContext";
 
+import { ThemeColors } from "../constants/colors";
+
 type NavProp = NativeStackNavigationProp<RootStackParamList, "Accessibility">;
 
 const AccessibilityScreen: React.FC = () => {
@@ -18,10 +20,17 @@ const AccessibilityScreen: React.FC = () => {
   const { t } = useTranslation(); //
 
   // Get global state
-  const { largeText, setLargeText, isUrdu, toggleUrdu } = useAccessibility();
+  const {
+      largeText, setLargeText,
+      isUrdu, toggleUrdu,
+      isDarkMode, toggleTheme, colors
+    } = useAccessibility();
+
 
   const [screenReader, setScreenReader] = useState(false);
   const [colorBlind, setColorBlind] = useState(false);
+
+  const styles = createStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -54,6 +63,15 @@ const AccessibilityScreen: React.FC = () => {
 
         <SectionTitle text={t("general")} />
 
+{/* NEW: Dark Mode Toggle */}
+        <SettingsRow
+          title="Dark Mode"
+          subtitle="Toggle light/dark theme"
+          value={isDarkMode}
+          onChange={toggleTheme}
+        />
+
+
         <SettingsRow
           title={t("larger_text")}
           subtitle={t("larger_text_sub")}
@@ -67,15 +85,28 @@ const AccessibilityScreen: React.FC = () => {
   );
 };
 
-export default AccessibilityScreen;
-
-const styles = StyleSheet.create({
+// export default AccessibilityScreen;
+//
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#2c333d",
+//     padding: 20,
+//   },
+//   scroll: {
+//     paddingBottom: 120,
+//   },
+// });
+// 3. This function generates styles based on the passed theme
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2c333d",
+    backgroundColor: colors.background, // Dynamic Background
     padding: 20,
   },
   scroll: {
     paddingBottom: 120,
   },
 });
+
+export default AccessibilityScreen;

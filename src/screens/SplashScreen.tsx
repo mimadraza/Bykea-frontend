@@ -4,10 +4,13 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import Logo from "../Component/Logo";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 type Props = NativeStackScreenProps<RootStackParamList, "Splash">;
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAccessibility(); // Get colors
+
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace("Login");
@@ -17,7 +20,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Logo size={48} />
     </View>
   );
@@ -28,7 +31,7 @@ export default SplashScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2c333d",
+    // backgroundColor: "#2c333d", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
   },

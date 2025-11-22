@@ -11,25 +11,27 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <AccessibleText style={styles.title}>{t("profile_title")}</AccessibleText>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.card, { backgroundColor: colors.sheetBackground }]}>
+        <AccessibleText style={[styles.title, { color: colors.primary }]}>{t("profile_title")}</AccessibleText>
 
         {/* Avatar */}
-        <View style={styles.avatarWrapper}>
+        <View style={[styles.avatarWrapper, { backgroundColor: colors.buttonBackground, borderColor: colors.primary }]}>
           <Image
             source={{
               uri: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-            }} // SAFE placeholder avatar
+            }}
             style={styles.avatar}
           />
         </View>
@@ -42,7 +44,7 @@ const ProfileScreen: React.FC = () => {
 
         {/* Menu Items */}
         <TouchableOpacity
-          style={styles.menuRow}
+          style={[styles.menuRow, { backgroundColor: colors.cardBackground }]}
           onPress={() => navigation.navigate("PersonalInfo")}
         >
           <AccessibleText style={styles.menuText}>{t("personal_info_menu")}</AccessibleText>
@@ -50,14 +52,14 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.menuRow}
+          style={[styles.menuRow, { backgroundColor: colors.cardBackground }]}
           onPress={() => navigation.navigate("SavedPlaces")}
         >
           <AccessibleText style={styles.menuText}>{t("saved_places_menu")}</AccessibleText>
           <AccessibleText style={styles.menuIcon}>📍</AccessibleText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuRow}>
+        <TouchableOpacity style={[styles.menuRow, { backgroundColor: colors.cardBackground }]}>
           <AccessibleText style={styles.menuText}>{t("download_data_menu")}</AccessibleText>
           <AccessibleText style={styles.menuIcon}>💾</AccessibleText>
         </TouchableOpacity>
@@ -72,7 +74,7 @@ export default ProfileScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1A1A1A",
+    // backgroundColor: "#1A1A1A", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
   },
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
   card: {
     width: "88%",
     height: "88%",
-    backgroundColor: "#2C333D",
+    // backgroundColor: "#2C333D", // Removed hardcoded color
     borderRadius: 40,
     padding: 20,
     alignItems: "center",
@@ -89,7 +91,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#3dff73",
+    // color: "#3dff73", // Removed hardcoded color
     marginTop: 10,
     marginBottom: 20,
   },
@@ -98,11 +100,11 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#3dff73",
+    // borderColor: "#3dff73", // Removed hardcoded color
   },
 
   avatar: {
@@ -126,12 +128,12 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 18,
     fontWeight: "600",
-    color: "white",
+    // color: "white", // Handled by AccessibleText
   },
 
   menuRow: {
     width: "100%",
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     padding: 14,
     borderRadius: 14,
     flexDirection: "row",
@@ -141,13 +143,13 @@ const styles = StyleSheet.create({
   },
 
   menuText: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText
     fontSize: 16,
     fontWeight: "600",
   },
 
   menuIcon: {
     fontSize: 20,
-    color: "white",
+    // color: "white", // Handled by AccessibleText
   },
 });

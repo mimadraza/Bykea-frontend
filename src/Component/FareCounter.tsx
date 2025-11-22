@@ -2,6 +2,8 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import AccessibleText from "./AccessibleText"; // Import your wrapper
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
+
 interface Props {
   value: number;
   onIncrease: () => void;
@@ -15,8 +17,10 @@ const FareCounter: React.FC<Props> = ({
   onDecrease,
   onOpenCustom,
 }) => {
+  const { colors } = useAccessibility(); // Get colors
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.buttonBackground }]}>
       <TouchableOpacity onPress={onDecrease}>
         <AccessibleText style={styles.button}>−</AccessibleText>
       </TouchableOpacity>
@@ -38,7 +42,7 @@ export default FareCounter;
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#1E1F22",
+    // backgroundColor: "#1E1F22", // Removed hardcoded color
     borderRadius: 40,
     alignItems: "center",
     paddingHorizontal: 12,
@@ -46,12 +50,12 @@ const styles = StyleSheet.create({
   },
   button: {
     fontSize: 26,
-    color: "white",
+    color: "white", // Keeping white for contrast with buttonBackground
     paddingHorizontal: 8,
   },
   value: {
     fontSize: 18,
-    color: "white",
+    color: "white", // Keeping white for contrast with buttonBackground
     width: 40,
     textAlign: "center",
     fontWeight: "600",

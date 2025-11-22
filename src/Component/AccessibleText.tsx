@@ -8,19 +8,21 @@ interface AccessibleTextProps extends TextProps {
 }
 
 const AccessibleText: React.FC<AccessibleTextProps> = ({ style, children, ...props }) => {
-  const { fontSizeMultiplier } = useAccessibility();
+  const { fontSizeMultiplier, colors } = useAccessibility(); // Get colors
 
-  // Flatten styles to get the current fontSize (defaulting to 14 if not defined)
   const flatStyle = StyleSheet.flatten(style || {});
-  const currentFontSize = flatStyle.fontSize || 14;
+  const baseFontSize = flatStyle.fontSize || 14;
 
-  // Calculate new size
-  const newFontSize = currentFontSize * fontSizeMultiplier;
+  // If the style provided has a specific color, use it.
+  // If not, use the theme's default text color.
+  const textColor = flatStyle.color || colors.text;
+
+  const newFontSize = baseFontSize * fontSizeMultiplier;
 
   return (
     <Text
       {...props}
-      style={[style, { fontSize: newFontSize }]} // Override fontSize
+      style={[style, { fontSize: newFontSize, color: textColor }]}
     >
       {children}
     </Text>

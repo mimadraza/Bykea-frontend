@@ -7,7 +7,8 @@ import {
   Modal,
 } from "react-native";
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next"; // 1. Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 interface Props {
   visible: boolean;
@@ -26,14 +27,17 @@ const CustomFareModal: React.FC<Props> = ({
   onDigitPress,
   onDelete,
 }) => {
-  const { t } = useTranslation(); // 2. Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.modalBox}>
+        <View style={[styles.modalBox, { backgroundColor: colors.background }]}>
+          {/* AccessibleText handles its own default text color (colors.text) */}
           <AccessibleText style={styles.title}>{t("custom_fare_title")}</AccessibleText>
 
-          <View style={styles.fareDisplay}>
+          <View style={[styles.fareDisplay, { backgroundColor: colors.cardBackground }]}>
             <AccessibleText style={styles.fareText}>PKR {value}</AccessibleText>
           </View>
 
@@ -43,7 +47,7 @@ const CustomFareModal: React.FC<Props> = ({
               (digit, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.key}
+                  style={[styles.key, { backgroundColor: colors.inputBackground }]}
                   onPress={() => onDigitPress(digit)}
                 >
                   <AccessibleText style={styles.keyText}>{digit}</AccessibleText>
@@ -52,20 +56,20 @@ const CustomFareModal: React.FC<Props> = ({
             )}
 
             {/* Delete Button */}
-            <TouchableOpacity style={styles.key} onPress={onDelete}>
+            <TouchableOpacity style={[styles.key, { backgroundColor: colors.inputBackground }]} onPress={onDelete}>
               <AccessibleText style={styles.keyText}>⌫</AccessibleText>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.confirmButton}
+            style={[styles.confirmButton, { backgroundColor: colors.primary }]}
             onPress={() => onConfirm(value)}
           >
             <AccessibleText style={styles.confirmText}>{t("apply_fare_btn")}</AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onClose}>
-            <AccessibleText style={styles.cancelText}>{t("cancel_btn")}</AccessibleText>
+            <AccessibleText style={[styles.cancelText, { color: colors.textSecondary }]}>{t("cancel_btn")}</AccessibleText>
           </TouchableOpacity>
         </View>
       </View>
@@ -85,21 +89,21 @@ const styles = StyleSheet.create({
 
   modalBox: {
     width: "85%",
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     borderRadius: 20,
     padding: 20,
     alignItems: "center",
   },
 
   title: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 12,
   },
 
   fareDisplay: {
-    backgroundColor: "#2c333d",
+    // backgroundColor: "#2c333d", // Removed hardcoded color
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -109,7 +113,7 @@ const styles = StyleSheet.create({
   },
 
   fareText: {
-    color: "white",
+    color: "white", // Keeping this white since fareDisplay background is dark in both themes
     fontSize: 32,
     fontWeight: "800",
   },
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
 
   key: {
     width: "30%",
-    backgroundColor: "#2F3338",
+    // backgroundColor: "#2F3338", // Removed hardcoded color
     paddingVertical: 16,
     borderRadius: 12,
     marginVertical: 6,
@@ -132,14 +136,14 @@ const styles = StyleSheet.create({
   },
 
   keyText: {
-    color: "white",
+    color: "white", // Keeping this white/dark contrast as keys are dark in both themes
     fontSize: 24,
     fontWeight: "700",
   },
 
   confirmButton: {
     width: "100%",
-    backgroundColor: "#3dff73",
+    // backgroundColor: "#3dff73", // Removed hardcoded color
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
@@ -147,13 +151,13 @@ const styles = StyleSheet.create({
   },
 
   confirmText: {
-    color: "#1A1A1A",
+    color: "#1A1A1A", // Keeping this dark for contrast against primary color
     fontSize: 18,
     fontWeight: "800",
   },
 
   cancelText: {
-    color: "#bbb",
+    // color: "#bbb", // Removed hardcoded color
     fontSize: 14,
     marginTop: 4,
   },

@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, ViewStyle } from "react-native";
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next"; // 1. Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 interface LogoProps {
   size?: number;
@@ -9,9 +10,19 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 48, style }) => {
-  const { t } = useTranslation(); // 2. Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
+
   return (
-    <AccessibleText style={[styles.logo, { fontSize: size }, style]}>
+    <AccessibleText style={[
+      styles.logo,
+      {
+        fontSize: size,
+        color: colors.primary, // Use primary color
+        textShadowColor: colors.primary // Use primary color for shadow
+      },
+      style
+    ]}>
       {t("logo_text")}
     </AccessibleText>
   );
@@ -22,8 +33,8 @@ export default Logo;
 const styles = StyleSheet.create({
   logo: {
     fontWeight: "bold",
-    color: "#3dff73",
-    textShadowColor: "rgba(61,255,115,0.7)",
+    // color: "#3dff73", // Removed hardcoded color
+    // textShadowColor: "rgba(61,255,115,0.7)", // Removed hardcoded color
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
   },

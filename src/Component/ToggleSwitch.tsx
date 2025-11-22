@@ -1,6 +1,5 @@
 import React from "react";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
-import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 interface ToggleProps {
   value: boolean;
@@ -8,11 +7,9 @@ interface ToggleProps {
 }
 
 const ToggleSwitch: React.FC<ToggleProps> = ({ value, onChange }) => {
-  const { colors } = useAccessibility(); // Get colors
-
   return (
     <TouchableOpacity style={styles.container} onPress={onChange}>
-      <View style={[styles.track, { backgroundColor: colors.buttonBackground }, value && [styles.trackOn, { backgroundColor: colors.primary }]]}>
+      <View style={[styles.track, value && styles.trackOn]}>
         <View style={[styles.thumb, value && styles.thumbOn]} />
       </View>
     </TouchableOpacity>
@@ -30,20 +27,20 @@ const styles = StyleSheet.create({
     width: 55,
     height: 28,
     borderRadius: 15,
-    // backgroundColor: "#444", // Removed hardcoded color
+    backgroundColor: "#444",
     justifyContent: "center",
     paddingHorizontal: 3,
   },
 
   trackOn: {
-    // backgroundColor: "#3dff73", // Removed hardcoded color
+    backgroundColor: "#3dff73",
   },
 
   thumb: {
     width: 22,
     height: 22,
     borderRadius: 12,
-    backgroundColor: "#ccc", // Keeping light gray/white for contrast
+    backgroundColor: "#ccc",
     transform: [{ translateX: 0 }],
   },
 

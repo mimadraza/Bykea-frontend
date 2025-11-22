@@ -1,15 +1,15 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import ToggleSwitch from "./ToggleSwitch";
-import AccessibleText from "./AccessibleText";
-import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
+import AccessibleText from "./AccessibleText"; // Import your wrapper
+
 
 interface RowProps {
   title: string;
   subtitle?: string;
   value: boolean;
   onChange: () => void;
-  icon?: React.ReactNode;
+  icon?: React.ReactNode;   // placeholder — icons can be added later
 }
 
 const SettingsRow: React.FC<RowProps> = ({
@@ -19,29 +19,14 @@ const SettingsRow: React.FC<RowProps> = ({
   onChange,
   icon,
 }) => {
-  // 1. Get the current theme colors
-  const { colors } = useAccessibility();
-
   return (
-    // 2. Override the static background color with the theme color
-    <View style={[styles.row, { backgroundColor: colors.surface }]}>
+    <View style={styles.row}>
       <View style={styles.left}>
-        {/* Optional: Make the icon background blend with the theme */}
-        <View style={[styles.iconPlaceholder, { backgroundColor: colors.background }]}>
-          {icon}
-        </View>
+        <View style={styles.iconPlaceholder}>{icon}</View>
 
         <View>
-          {/* 3. Override text colors dynamically */}
-          <AccessibleText style={[styles.title, { color: colors.text }]}>
-            {title}
-          </AccessibleText>
-
-          {subtitle && (
-            <AccessibleText style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {subtitle}
-            </AccessibleText>
-          )}
+          <AccessibleText style={styles.title}>{title}</AccessibleText>
+          {subtitle && <AccessibleText style={styles.subtitle}>{subtitle}</AccessibleText>}
         </View>
       </View>
 
@@ -55,7 +40,7 @@ export default SettingsRow;
 const styles = StyleSheet.create({
   row: {
     width: "100%",
-    // backgroundColor: "#343b43", // Removed: Handled dynamically in the component
+    backgroundColor: "#343b43",
     padding: 16,
     borderRadius: 12,
     marginBottom: 18,
@@ -74,7 +59,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 8,
-    // backgroundColor: "#20252b", // Removed: Handled dynamically
+    backgroundColor: "#20252b",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -82,12 +67,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "600",
-    // color: "white", // Removed: Handled dynamically so it turns black in light mode
+    color: "white",
   },
 
   subtitle: {
     fontSize: 12,
-    // color: "#9ea3aa", // Removed: Handled dynamically
+    color: "#9ea3aa",
     marginTop: 2,
   },
 });

@@ -7,53 +7,37 @@ import {
 
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next"; // Import this
 
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import Logo from "../Component/Logo";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
-import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
-
 type NavProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation();
-  const { colors } = useAccessibility(); // Get colors
+  const { t } = useTranslation(); // Get the translate function
   const [phone, setPhone] = useState("");
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <Logo size={40} style={{ textAlign: "center", marginBottom: 60 }} />
 
       <AccessibleText style={styles.label}>{t("phone_label")}</AccessibleText>
 
       <AccessibleTextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.inputBackground,
-            color: colors.text,
-            borderColor: colors.border,
-          },
-        ]}
+        style={styles.input}
         keyboardType="phone-pad"
         placeholder="0333229781"
         value={phone}
         onChangeText={setPhone}
-        placeholderTextColor={colors.textSecondary}
+        placeholderTextColor="#666"
       />
 
       <TouchableOpacity
-        style={[
-          styles.button,
-          {
-            backgroundColor: colors.primary,
-            shadowColor: colors.primary, // Use primary for shadow
-          },
-        ]}
+        style={styles.button}
         onPress={() => navigation.navigate("OTP")}
       >
         <AccessibleText style={styles.buttonText}>{t("login_btn")}</AccessibleText>
@@ -65,7 +49,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: "#1F242C", // Removed hardcoded color
+    backgroundColor: "#1F242C",
     paddingHorizontal: 30,
     paddingTop: 80,
   },
@@ -73,7 +57,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontWeight: "bold",
-    // color: "white", // Handled by AccessibleText default
+    color: "white",
     marginBottom: 10,
   },
 
@@ -82,21 +66,21 @@ const styles = StyleSheet.create({
     fontSize: 26,
     paddingVertical: 14,
     paddingHorizontal: 20,
-    // backgroundColor: "#000", // Removed hardcoded color
+    backgroundColor: "#000",
     borderRadius: 12,
-    // color: "white", // Removed hardcoded color
+    color: "white",
     marginBottom: 20,
     borderWidth: 2,
-    // borderColor: "#1A1A1A", // Removed hardcoded color
+    borderColor: "#1A1A1A",
   },
 
   button: {
-    // backgroundColor: "#2ECC71", // Removed hardcoded color
+    backgroundColor: "#2ECC71",
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
-    // shadowColor: "#2ECC71", // Removed hardcoded color
+    shadowColor: "#2ECC71",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 10,
@@ -105,6 +89,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#1A1A1A", // Keeping dark for contrast against primary
+    color: "#fff",
   },
 });

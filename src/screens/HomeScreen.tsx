@@ -91,7 +91,7 @@ const HomeScreen: React.FC = () => {
                 borderColor: colors.border,
                 borderWidth: borderWidth
               }
-            ]}>
+            ]} onPress={() => navigation.navigate("Helpline")}>
               <AccessibleText style={styles.smallCardTitle}>
                 {t("helpline_card_title")}
               </AccessibleText>
@@ -104,7 +104,7 @@ const HomeScreen: React.FC = () => {
                 borderColor: colors.border,
                 borderWidth: borderWidth
               }
-            ]}>
+            ]} onPress={() => navigation.navigate("DeliveryDetails")} >
               <AccessibleText style={styles.smallCardTitle}>
                 {t("delivery_card_title")}
               </AccessibleText>

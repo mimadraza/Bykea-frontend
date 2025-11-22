@@ -20,11 +20,18 @@ const SettingsRow: React.FC<RowProps> = ({
   icon,
 }) => {
   // 1. Get the current theme colors
-  const { colors } = useAccessibility();
+  const { colors, borderWidth } = useAccessibility();
 
   return (
     // 2. Override the static background color with the theme color
-    <View style={[styles.row, { backgroundColor: colors.surface }]}>
+    <View style={[styles.row, {
+        backgroundColor: colors.surface,
+        // Add border logic here to match the card style
+        borderColor: colors.border,
+        borderWidth: borderWidth,
+        // 1px normally, 3px in HC
+        borderBottomWidth: borderWidth // Ensure bottom is thick too
+        }]}>
       <View style={styles.left}>
         {/* Optional: Make the icon background blend with the theme */}
         <View style={[styles.iconPlaceholder, { backgroundColor: colors.background }]}>

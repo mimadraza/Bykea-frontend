@@ -23,7 +23,7 @@ type NavProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const { t } = useTranslation();
-  const { colors } = useAccessibility(); // Get colors
+  const { colors, borderWidth } = useAccessibility(); // Get colors
   const mapRef = useRef<WebView>(null);
 
   // SIDEBAR STATE
@@ -66,29 +66,51 @@ const HomeScreen: React.FC = () => {
       <View style={[styles.middleContainer, { backgroundColor: colors.sheetBackground }]} />
 
       <View style={styles.overlayButtons}>
-        <TouchableOpacity
-          style={[styles.largeCard, { backgroundColor: colors.cardBackground }]}
-          onPress={() => navigation.navigate("Pickup")}
-        >
-          <AccessibleText style={styles.largeCardTitle}>
-            {t("ride_card_title")}
-          </AccessibleText>
-        </TouchableOpacity>
-
-        <View style={styles.row}>
-          <TouchableOpacity style={[styles.smallCard, { backgroundColor: colors.cardBackground }]}>
-            <AccessibleText style={styles.smallCardTitle}>
-              {t("helpline_card_title")}
+          <TouchableOpacity
+            style={[
+              styles.largeCard,
+              {
+                backgroundColor: colors.cardBackground,
+                // Add border for visibility in High Contrast mode
+                borderColor: colors.border,
+                borderWidth: borderWidth
+              }
+            ]}
+            onPress={() => navigation.navigate("Pickup")}
+          >
+            <AccessibleText style={styles.largeCardTitle}>
+              {t("ride_card_title")}
             </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.smallCard, { backgroundColor: colors.cardBackground }]}>
-            <AccessibleText style={styles.smallCardTitle}>
-              {t("delivery_card_title")}
-            </AccessibleText>
-          </TouchableOpacity>
+          <View style={styles.row}>
+            <TouchableOpacity style={[
+              styles.smallCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: borderWidth
+              }
+            ]}>
+              <AccessibleText style={styles.smallCardTitle}>
+                {t("helpline_card_title")}
+              </AccessibleText>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[
+              styles.smallCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: borderWidth
+              }
+            ]}>
+              <AccessibleText style={styles.smallCardTitle}>
+                {t("delivery_card_title")}
+              </AccessibleText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
     </View>
   );
 };

@@ -75,7 +75,7 @@ const HomeScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.row}>
-          <TouchableOpacity style={styles.smallCard}>
+          <TouchableOpacity style={styles.smallCard} onPress={() => navigation.navigate("Helpline")}>
             {/* 3. Replace hardcoded string with t("key") */}
             <AccessibleText style={styles.smallCardTitle}>
               {t("helpline_card_title")}

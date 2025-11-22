@@ -13,6 +13,8 @@ import ChooseRideScreen from "../screens/ChooseRideScreen";
 import RideRequestScreen from "../screens/RideRequestScreen";
 import RideHistoryScreen from "../screens/RideHistoryScreen";
 import RideInProgressScreen from "../screens/RideInProgressScreen";
+import HelplineScreen from "../screens/HelplineScreen";
+
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -27,6 +29,7 @@ export type RootStackParamList = {
   };
   Profile: undefined;  // <-- correct
   RideHistory: undefined;
+  Helpline: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -53,6 +56,7 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="RideHistory" component={RideHistoryScreen} />
         <Stack.Screen name="RideInProgress" component={RideInProgressScreen} />
+        <Stack.Screen name="Helpline" component={HelplineScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
 
 const rideHistoryData = [
   {
@@ -42,7 +43,8 @@ const rideHistoryData = [
 ];
 
 const RideHistoryScreen: React.FC = () => {
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
   const [search, setSearch] = useState("");
 
   const filtered = rideHistoryData.filter((item) =>
@@ -50,16 +52,16 @@ const RideHistoryScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <AccessibleText style={styles.title}>{t("history_title")}</AccessibleText>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.card, { backgroundColor: colors.sheetBackground }]}>
+        <AccessibleText style={[styles.title, { color: colors.primary }]}>{t("history_title")}</AccessibleText>
 
         {/* Search bar */}
-        <View style={styles.searchRow}>
-          <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
+        <View style={[styles.searchRow, { backgroundColor: colors.cardBackground }]}>
+          <AccessibleText style={[styles.searchIcon, { color: colors.textSecondary }]}>🔍</AccessibleText>
           <AccessibleTextInput
             placeholder={t("search_history_placeholder")}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.textSecondary}
             style={styles.searchInput}
             value={search}
             onChangeText={setSearch}
@@ -73,7 +75,7 @@ const RideHistoryScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           style={{ marginTop: 15 }}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.historyRow}>
+            <TouchableOpacity style={[styles.historyRow, { backgroundColor: colors.cardBackground }]}>
               <Image
                 source={require("../assets/map-mini.png")}
                 style={styles.mapThumb}
@@ -83,7 +85,7 @@ const RideHistoryScreen: React.FC = () => {
                 <AccessibleText style={styles.routeText}>
                   {item.from} to {item.to}
                 </AccessibleText>
-                <AccessibleText style={styles.dateText}>{item.date}</AccessibleText>
+                <AccessibleText style={[styles.dateText, { color: colors.textSecondary }]}>{item.date}</AccessibleText>
               </View>
 
               <View style={styles.driverRight}>
@@ -91,7 +93,7 @@ const RideHistoryScreen: React.FC = () => {
                   source={require("../assets/user.png")}
                   style={styles.driverImg}
                 />
-                <AccessibleText style={styles.driverName}>{item.driver}</AccessibleText>
+                <AccessibleText style={[styles.driverName, { color: colors.textSecondary }]}>{item.driver}</AccessibleText>
               </View>
             </TouchableOpacity>
           )}
@@ -106,7 +108,7 @@ export default RideHistoryScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1A1A1A",
+    // backgroundColor: "#1A1A1A", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
   },
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
   card: {
     width: "88%",
     height: "88%",
-    backgroundColor: "#2C333D",
+    // backgroundColor: "#2C333D", // Removed hardcoded color
     borderRadius: 40,
     padding: 20,
   },
@@ -122,7 +124,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#3dff73",
+    // color: "#3dff73", // Removed hardcoded color
     textAlign: "center",
     marginBottom: 18,
   },
@@ -130,20 +132,20 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     borderRadius: 14,
     paddingHorizontal: 10,
   },
 
   searchIcon: {
     fontSize: 18,
-    color: "#aaa",
+    // color: "#aaa", // Removed hardcoded color
     marginRight: 6,
   },
 
   searchInput: {
     flex: 1,
-    color: "white",
+    // color: "white", // Handled by AccessibleTextInput
     fontSize: 15,
     paddingVertical: 8,
   },
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
   historyRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1F2124",
+    // backgroundColor: "#1F2124", // Removed hardcoded color
     padding: 12,
     borderRadius: 14,
     marginBottom: 12,
@@ -166,13 +168,13 @@ const styles = StyleSheet.create({
 
   routeText: {
     fontSize: 15,
-    color: "white",
+    // color: "white", // Handled by AccessibleText
     fontWeight: "600",
   },
 
   dateText: {
     fontSize: 12,
-    color: "#ccc",
+    // color: "#ccc", // Removed hardcoded color
   },
 
   driverRight: {
@@ -188,6 +190,6 @@ const styles = StyleSheet.create({
 
   driverName: {
     fontSize: 11,
-    color: "#ccc",
+    // color: "#ccc", // Removed hardcoded color
   },
 });

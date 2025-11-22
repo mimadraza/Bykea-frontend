@@ -15,17 +15,20 @@ import Sidebar from "../Component/Sidebar";
 
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
 
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
+import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
+
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const PickupScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
+  const { colors } = useAccessibility(); // Get colors
 
   // SIDEBAR STATE
   const [open, setOpen] = useState(false);
@@ -73,37 +76,36 @@ const PickupScreen: React.FC = () => {
       )}
 
       {/* PICKUP CARD – should stay on top of map but BELOW sidebar */}
-      <View style={styles.overlayCard}>
+      <View style={[styles.overlayCard, { backgroundColor: colors.sheetBackground }]}>
         <View style={styles.markerColumn}>
-          <View style={styles.circleOuter}>
-            <View style={styles.circleInner} />
+          {/* Pickup location marker */}
+          <View style={[styles.circleOuter, { borderColor: colors.text }]}>
+            <View style={[styles.circleInner, { backgroundColor: colors.text }]} />
           </View>
-
-          <View style={styles.dottedLine} />
-
-          <AccessibleText style={styles.arrow}>➤</AccessibleText>
+          {/* Dotted line (Keeping accent color for route) */}
+          <View style={[styles.dottedLine, { backgroundColor: colors.accent }]} />
+          {/* Destination arrow (Keeping accent color for route) */}
+          <AccessibleText style={[styles.arrow, { color: colors.accent }]}>➤</AccessibleText>
         </View>
 
         <View style={{ flex: 1 }}>
-          <View style={styles.inputRow}>
-            {/* Translate Pickup Location */}
+          <View style={[styles.inputRow, { backgroundColor: colors.inputBackground }]}>
             <AccessibleText style={styles.inputText}>
               {t("pickup_static_location")}
             </AccessibleText>
-            <AccessibleText style={styles.plus}>+</AccessibleText>
+            <AccessibleText style={[styles.plus, { color: colors.primary }]}>+</AccessibleText>
           </View>
 
-          <View style={styles.inputRow}>
+          <View style={[styles.inputRow, { backgroundColor: colors.inputBackground }]}>
             <AccessibleTextInput
               placeholder={t("destination_placeholder")}
-              placeholderTextColor="#777"
+              placeholderTextColor={colors.textSecondary}
               style={styles.destInput}
             />
           </View>
 
           {/* RECENT LOCATIONS */}
           <View style={styles.recentContainer}>
-            {/* Translate Title */}
             <AccessibleText style={styles.recentTitle}>
               {t("recent_locations_title")}
             </AccessibleText>
@@ -115,7 +117,7 @@ const PickupScreen: React.FC = () => {
                   navigation.navigate("ChooseRide", { destination: loc })
                 }
               >
-                <AccessibleText style={styles.recentItem}>{loc}</AccessibleText>
+                <AccessibleText style={[styles.recentItem, { borderColor: colors.border, color: colors.textSecondary }]}>{loc}</AccessibleText>
               </TouchableOpacity>
             ))}
           </View>
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
     right: 20,
     padding: 18,
     borderRadius: 24,
-    backgroundColor: "rgba(30, 35, 45, 0.98)",
+    // backgroundColor: "rgba(30, 35, 45, 0.98)", // Removed hardcoded color
     flexDirection: "row",
     zIndex: 20,
   },
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: "#fff",
+    // borderColor: "#fff", // Removed hardcoded color
     justifyContent: "center",
     alignItems: "center",
   },
@@ -185,26 +187,26 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff", // Removed hardcoded color
   },
 
   dottedLine: {
     width: 2,
     height: 55,
-    backgroundColor: "#ffc107",
+    // backgroundColor: "#ffc107", // Removed hardcoded color
     marginVertical: 6,
   },
 
   arrow: {
     fontSize: 20,
-    color: "#ffc107",
+    // color: "#ffc107", // Removed hardcoded color
   },
 
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#2c333d",
+    // backgroundColor: "#2c333d", // Removed hardcoded color
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -212,20 +214,20 @@ const styles = StyleSheet.create({
   },
 
   inputText: {
-    color: "white",
+    // color: "white", // Handled by AccessibleText
     fontSize: 15,
     flex: 1,
     marginRight: 10,
   },
 
   plus: {
-    color: "#3dff73",
+    // color: "#3dff73", // Removed hardcoded color
     fontSize: 24,
     fontWeight: "bold",
   },
 
   destInput: {
-    color: "white",
+    // color: "white", // Handled by AccessibleTextInput
     fontSize: 15,
     flex: 1,
   },
@@ -235,16 +237,16 @@ const styles = StyleSheet.create({
   },
 
   recentTitle: {
-    color: "#fff",
+    // color: "#fff", // Handled by AccessibleText
     fontWeight: "700",
     marginBottom: 6,
   },
 
   recentItem: {
-    color: "#fff",
+    // color: "#fff", // Removed hardcoded color
     paddingVertical: 4,
     borderBottomWidth: 1,
-    borderColor: "#444",
+    // borderColor: "#444", // Removed hardcoded color
     fontSize: 13,
   },
 });

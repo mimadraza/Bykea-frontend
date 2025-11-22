@@ -18,8 +18,7 @@ import AccessibleText from "../Component/AccessibleText";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { useTranslation } from "react-i18next";
-import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
+import { useTranslation } from "react-i18next"; // Import this
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -39,8 +38,7 @@ const RIDE_META = {
 const RideRequestScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
-  const { t } = useTranslation();
-  const { colors } = useAccessibility(); // Get colors
+  const { t } = useTranslation(); // Get the translate function
 
   const { rideType, fare: initialFare } = route.params as {
     rideType: "Motorbike" | "Car" | "RickShaw";
@@ -138,12 +136,13 @@ const RideRequestScreen: React.FC = () => {
 
 
       {/* BOTTOM RIDE SUMMARY */}
-      <View style={[styles.bottomCard, { backgroundColor: colors.sheetBackground, borderColor: colors.primary }]}>
+      <View style={styles.bottomCard}>
+        {/* Translate rideType name if needed, assuming the key is already in i18n for the full name */}
         <AccessibleText style={styles.rideTitle}>
           {t(`${rideType.toLowerCase()}_name`)}
         </AccessibleText>
 
-        <View style={[styles.rideIconWrapper, { backgroundColor: colors.cardBackground }]}>
+        <View style={styles.rideIconWrapper}>
           <AccessibleText style={styles.rideIcon}>{RIDE_META[rideType].icon}</AccessibleText>
         </View>
 
@@ -156,8 +155,8 @@ const RideRequestScreen: React.FC = () => {
           />
         </View>
 
-        <TouchableOpacity style={[styles.keepLookingBtn, { backgroundColor: colors.buttonBackground }]} >
-          <AccessibleText style={[styles.keepLookingText, { color: colors.text }]}>{t("keep_looking_btn")}</AccessibleText>
+        <TouchableOpacity style={styles.keepLookingBtn}>
+          <AccessibleText style={styles.keepLookingText}>{t("keep_looking_btn")}</AccessibleText>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -203,17 +202,17 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 15,
     right: 15,
-    // backgroundColor: "#25282B", // Removed hardcoded color
+    backgroundColor: "#25282B",
     borderRadius: 24,
     paddingVertical: 18,
     paddingHorizontal: 20,
     zIndex: 40,
     borderWidth: 2,
-    // borderColor: "#3dff73", // Removed hardcoded color
+    borderColor: "#3dff73",
   },
 
   rideTitle: {
-    // color: "white", // Handled by AccessibleText
+    color: "white",
     fontSize: 16,
     fontWeight: "700",
     textAlign: "center",
@@ -225,7 +224,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    // backgroundColor: "#1F2124", // Removed hardcoded color
+    backgroundColor: "#1F2124",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
@@ -241,7 +240,7 @@ const styles = StyleSheet.create({
   },
 
   keepLookingBtn: {
-    // backgroundColor: "#F5F5F5", // Removed hardcoded color
+    backgroundColor: "#F5F5F5",
     paddingVertical: 12,
     borderRadius: 16,
     marginBottom: 10,
@@ -249,12 +248,12 @@ const styles = StyleSheet.create({
 
   keepLookingText: {
     textAlign: "center",
-    // color: "#333", // Removed hardcoded color
+    color: "#333",
     fontWeight: "700",
   },
 
   cancelBtn: {
-    backgroundColor: "#D62828", // Keeping red for cancel/danger action
+    backgroundColor: "#D62828",
     paddingVertical: 12,
     borderRadius: 16,
   },

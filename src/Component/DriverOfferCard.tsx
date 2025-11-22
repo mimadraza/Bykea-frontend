@@ -2,8 +2,7 @@
 import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next";
-import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
+import { useTranslation } from "react-i18next"; // 1. Import this
 
 export interface DriverOffer {
   id: string;
@@ -20,17 +19,15 @@ interface Props {
 }
 
 const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
-  const { t } = useTranslation();
-  const { colors } = useAccessibility(); // Get colors
-
+  const { t } = useTranslation(); // 2. Get the translate function
   return (
-    <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+    <View style={styles.card}>
       {/* Avatar */}
       <View style={styles.avatarWrapper}>
         {offer.avatarUrl ? (
           <Image source={{ uri: offer.avatarUrl }} style={styles.avatar} />
         ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.buttonBackground }]}>
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <AccessibleText style={styles.avatarInitial}>
               {offer.name.charAt(0).toUpperCase()}
             </AccessibleText>
@@ -50,10 +47,10 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
 
       {/* Buttons */}
       <View style={styles.btnCol}>
-        <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: colors.primary }]} onPress={onAccept}>
+        <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
           <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.rejectBtn, { backgroundColor: colors.inputBackground }]} onPress={onReject}>
+        <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
           <AccessibleText style={styles.rejectText}>{t("reject_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>
@@ -67,7 +64,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    // backgroundColor: "#25282B", // Removed hardcoded color
+    backgroundColor: "#25282B",
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 18,
@@ -86,13 +83,13 @@ const styles = StyleSheet.create({
   },
 
   avatarPlaceholder: {
-    // backgroundColor: "#444", // Removed hardcoded color
+    backgroundColor: "#444",
     justifyContent: "center",
     alignItems: "center",
   },
 
   avatarInitial: {
-    color: "white", // Keeping white for contrast with placeholder
+    color: "white",
     fontWeight: "700",
     fontSize: 18,
   },
@@ -102,13 +99,13 @@ const styles = StyleSheet.create({
   },
 
   eta: {
-    // color: "white", // Handled by AccessibleText
+    color: "white",
     fontWeight: "700",
     fontSize: 14,
   },
 
   name: {
-    // color: "white", // Handled by AccessibleText
+    color: "white",
     fontSize: 13,
   },
 
@@ -119,13 +116,13 @@ const styles = StyleSheet.create({
   },
 
   star: {
-    color: "#FFC107", // Keeping hardcoded for star color
+    color: "#FFC107",
     marginRight: 4,
     fontSize: 12,
   },
 
   rating: {
-    // color: "white", // Handled by AccessibleText
+    color: "white",
     fontSize: 12,
   },
 
@@ -136,7 +133,7 @@ const styles = StyleSheet.create({
   },
 
   acceptBtn: {
-    // backgroundColor: "#3dff73", // Removed hardcoded color
+    backgroundColor: "#3dff73",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -144,20 +141,20 @@ const styles = StyleSheet.create({
   },
 
   acceptText: {
-    color: "#1A1A1A", // Keeping dark for contrast against primary
+    color: "#1A1A1A",
     fontSize: 12,
     fontWeight: "700",
   },
 
   rejectBtn: {
-    // backgroundColor: "#3A3D41", // Removed hardcoded color
+    backgroundColor: "#3A3D41",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
 
   rejectText: {
-    // color: "white", // Handled by AccessibleText
+    color: "white",
     fontSize: 12,
     fontWeight: "600",
   },

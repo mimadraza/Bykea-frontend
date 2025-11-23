@@ -46,11 +46,11 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("Accessibility")}>
-          <AccessibleText style={styles.sidebarItem}>{t("sidebar_settings")}</AccessibleText>
+          <AccessibleText style={styles.sidebarItem}>{t("sidebar_accessibility")}</AccessibleText>
         </TouchableOpacity>
 
         <AccessibleText style={styles.sidebarItem}>{t("sidebar_legal")}</AccessibleText>
-        <AccessibleText style={styles.sidebarItem}>{t("sidebar_accessibility")}</AccessibleText>
+        <AccessibleText style={styles.sidebarItem}>{t("sidebar_settings")}</AccessibleText>
 
         <TouchableOpacity style={styles.logoutBtn}>
           <AccessibleText style={styles.logoutText}>{t("sidebar_logout")}</AccessibleText>

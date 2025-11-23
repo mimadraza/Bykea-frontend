@@ -51,7 +51,6 @@ const AccessibilityScreen: React.FC = () => {
           onChange={toggleColorBlind}
         />
 
-        {/* NEW: High Contrast Toggle */}
         <SettingsRow
           title="High Contrast"
           subtitle="Increase visibility & borders"

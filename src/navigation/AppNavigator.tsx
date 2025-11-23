@@ -27,7 +27,7 @@ export type RootStackParamList = {
     rideType: "Motorbike" | "Car" | "RickShaw";
     fare: number;
   };
-  Profile: undefined;  // <-- correct
+  Profile: undefined;
   RideHistory: undefined;
   Helpline: undefined;
 };

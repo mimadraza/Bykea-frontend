@@ -1,14 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, FlatList, Image, TouchableOpacity } from "react-native";
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 const rideHistoryData = [
   {
@@ -42,20 +37,25 @@ const rideHistoryData = [
 ];
 
 const RideHistoryScreen: React.FC = () => {
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
+  const { colors, borderWidth } = useAccessibility();
   const [search, setSearch] = useState("");
 
-  const filtered = rideHistoryData.filter((item) =>
-    `${item.from} to ${item.to}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = rideHistoryData.filter((item) => `${item.from} ${item.to}`.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <AccessibleText style={styles.title}>{t("history_title")}</AccessibleText>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[
+        styles.card,
+        {
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+          borderWidth: borderWidth
+        }
+      ]}>
+        <AccessibleText style={[styles.title, { color: colors.primary }]}>{t("history_title")}</AccessibleText>
 
-        {/* Search bar */}
-        <View style={styles.searchRow}>
+        <View style={[styles.searchRow, { backgroundColor: colors.inputBackground }]}>
           <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
           <AccessibleTextInput
             placeholder={t("search_history_placeholder")}
@@ -66,32 +66,23 @@ const RideHistoryScreen: React.FC = () => {
           />
         </View>
 
-        {/* Ride list */}
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
           style={{ marginTop: 15 }}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.historyRow}>
-              <Image
-                source={require("../assets/map-mini.png")}
-                style={styles.mapThumb}
-              />
-
+            <TouchableOpacity style={[
+              styles.historyRow,
+              { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: borderWidth }
+            ]}>
+              <Image source={require("../assets/map-mini.png")} style={styles.mapThumb} />
               <View style={{ flex: 1 }}>
-                <AccessibleText style={styles.routeText}>
-                  {item.from} to {item.to}
-                </AccessibleText>
-                <AccessibleText style={styles.dateText}>{item.date}</AccessibleText>
+                <AccessibleText style={styles.routeText}>{item.from} to {item.to}</AccessibleText>
+                <AccessibleText style={[styles.dateText, { color: colors.textSecondary }]}>{item.date}</AccessibleText>
               </View>
-
               <View style={styles.driverRight}>
-                <Image
-                  source={require("../assets/user.png")}
-                  style={styles.driverImg}
-                />
-                <AccessibleText style={styles.driverName}>{item.driver}</AccessibleText>
+                <Image source={require("../assets/user.png")} style={styles.driverImg} />
+                <AccessibleText style={[styles.driverName, { color: colors.textSecondary }]}>{item.driver}</AccessibleText>
               </View>
             </TouchableOpacity>
           )}
@@ -104,90 +95,17 @@ const RideHistoryScreen: React.FC = () => {
 export default RideHistoryScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1A1A1A",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  card: {
-    width: "88%",
-    height: "88%",
-    backgroundColor: "#2C333D",
-    borderRadius: 40,
-    padding: 20,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#3dff73",
-    textAlign: "center",
-    marginBottom: 18,
-  },
-
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1F2124",
-    borderRadius: 14,
-    paddingHorizontal: 10,
-  },
-
-  searchIcon: {
-    fontSize: 18,
-    color: "#aaa",
-    marginRight: 6,
-  },
-
-  searchInput: {
-    flex: 1,
-    color: "white",
-    fontSize: 15,
-    paddingVertical: 8,
-  },
-
-  historyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1F2124",
-    padding: 12,
-    borderRadius: 14,
-    marginBottom: 12,
-  },
-
-  mapThumb: {
-    width: 50,
-    height: 50,
-    marginRight: 12,
-    borderRadius: 8,
-  },
-
-  routeText: {
-    fontSize: 15,
-    color: "white",
-    fontWeight: "600",
-  },
-
-  dateText: {
-    fontSize: 12,
-    color: "#ccc",
-  },
-
-  driverRight: {
-    alignItems: "center",
-  },
-
-  driverImg: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    marginBottom: 4,
-  },
-
-  driverName: {
-    fontSize: 11,
-    color: "#ccc",
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center" },
+  card: { width: "88%", height: "88%", borderRadius: 40, padding: 20 },
+  title: { fontSize: 26, fontWeight: "700", textAlign: "center", marginBottom: 18 },
+  searchRow: { flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 10 },
+  searchIcon: { fontSize: 18, color: "#aaa", marginRight: 6 },
+  searchInput: { flex: 1, fontSize: 15, paddingVertical: 8 },
+  historyRow: { flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 14, marginBottom: 12 },
+  mapThumb: { width: 50, height: 50, marginRight: 12, borderRadius: 8 },
+  routeText: { fontSize: 15, fontWeight: "600" },
+  dateText: { fontSize: 12 },
+  driverRight: { alignItems: "center" },
+  driverImg: { width: 35, height: 35, borderRadius: 18, marginBottom: 4 },
+  driverName: { fontSize: 11 },
 });

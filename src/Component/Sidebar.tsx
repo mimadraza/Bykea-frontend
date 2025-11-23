@@ -10,7 +10,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next"; // 1. Import this
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -21,18 +22,22 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // 2. Get the translate function
+  const { t } = useTranslation();
+  const { colors, borderWidth } = useAccessibility();
 
   return (
     <>
-      {/* DARK OVERLAY */}
       <TouchableOpacity style={styles.overlay} onPress={onClose} />
 
-      {/* SIDEBAR PANEL */}
       <Animated.View
         style={[
           styles.sidebar,
-          { transform: [{ translateX: slideAnim }] },
+          {
+            transform: [{ translateX: slideAnim }],
+            backgroundColor: colors.background, // Dynamic BG
+            borderRightWidth: borderWidth, // High contrast border
+            borderColor: colors.border
+          },
         ]}
       >
         <AccessibleText style={styles.sidebarTitle}>{t("user_name")}</AccessibleText>
@@ -72,41 +77,36 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
     zIndex: 40,
   },
-
   sidebar: {
     position: "absolute",
     top: 0,
     bottom: 0,
     left: 0,
     width: 260,
-    backgroundColor: "rgba(20,20,20,0.95)",
+    // backgroundColor: "rgba(20,20,20,0.95)", // REMOVED
     paddingTop: 70,
     paddingHorizontal: 20,
     zIndex: 50,
   },
-
   sidebarTitle: {
-    color: "white",
+    // color: "white", // REMOVED
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 20,
   },
-
   sidebarItem: {
-    color: "#ddd",
+    // color: "#ddd", // REMOVED - will default to colors.text (Black/White)
     fontSize: 17,
     marginVertical: 10,
   },
-
   logoutBtn: {
     marginTop: 40,
     paddingVertical: 12,
     borderRadius: 10,
     backgroundColor: "#ff4444",
   },
-
   logoutText: {
-    color: "white",
+    color: "white", // Keep white because button is always Red
     textAlign: "center",
     fontWeight: "700",
   },

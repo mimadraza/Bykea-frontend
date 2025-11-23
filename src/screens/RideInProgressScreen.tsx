@@ -16,6 +16,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
 import { useTranslation } from "react-i18next"; // Import this
+import { useAccessibility } from "../context/AccessibilityContext";
+
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -23,7 +25,7 @@ const RideInProgressScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
   const { t } = useTranslation(); // Get the translate function
-
+  const { colors, borderWidth } = useAccessibility();
   const route = useRoute();
   const { driver } = route.params as {
     driver: {

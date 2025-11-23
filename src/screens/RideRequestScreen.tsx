@@ -19,6 +19,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { useTranslation } from "react-i18next"; // Import this
+import { useAccessibility } from "../context/AccessibilityContext";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -39,6 +40,7 @@ const RideRequestScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
   const { t } = useTranslation(); // Get the translate function
+  const { colors, borderWidth } = useAccessibility();
 
   const { rideType, fare: initialFare } = route.params as {
     rideType: "Motorbike" | "Car" | "RickShaw";

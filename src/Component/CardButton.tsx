@@ -1,7 +1,7 @@
-// Component/CardButton.tsx
 import React from "react";
 import { Pressable, View, StyleSheet } from "react-native";
 import AccessibleText from "./AccessibleText";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 interface Props {
   label: string;
@@ -10,8 +10,20 @@ interface Props {
 }
 
 const CardButton = ({ label, onPress, rightIcon }: Props) => {
+  const { colors, borderWidth } = useAccessibility();
+
   return (
-    <Pressable onPress={onPress} style={styles.card}>
+    <Pressable 
+      onPress={onPress} 
+      style={[
+        styles.card, 
+        { 
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          borderWidth: borderWidth
+        }
+      ]}
+    >
       <AccessibleText style={styles.text}>{label}</AccessibleText>
       {rightIcon && <View style={styles.icon}>{rightIcon}</View>}
     </Pressable>
@@ -20,7 +32,7 @@ const CardButton = ({ label, onPress, rightIcon }: Props) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#2D333A",
+    // backgroundColor: "#2D333A", // REMOVED
     borderRadius: 10,
     paddingVertical: 18,
     paddingHorizontal: 16,
@@ -30,7 +42,7 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   text: {
-    color: "white",
+    // color: "white", // REMOVED
     fontSize: 16,
     fontWeight: "600"
   },

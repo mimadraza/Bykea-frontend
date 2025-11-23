@@ -1,12 +1,13 @@
-// src/Component/FareCounter.tsx
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
-import AccessibleText from "./AccessibleText"; // Import your wrapper
+import AccessibleText from "./AccessibleText"; 
+import { useAccessibility } from "../context/AccessibilityContext";
+
 interface Props {
   value: number;
   onIncrease: () => void;
   onDecrease: () => void;
-  onOpenCustom: () => void;    // NEW
+  onOpenCustom: () => void;   
 }
 
 const FareCounter: React.FC<Props> = ({
@@ -15,19 +16,27 @@ const FareCounter: React.FC<Props> = ({
   onDecrease,
   onOpenCustom,
 }) => {
+  const { colors, borderWidth } = useAccessibility();
+
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.inputBackground,
+        borderColor: colors.border,
+        borderWidth: borderWidth
+      }
+    ]}>
       <TouchableOpacity onPress={onDecrease}>
-        <AccessibleText style={styles.button}>−</AccessibleText>
+        <AccessibleText style={[styles.button, { color: colors.text }]}>−</AccessibleText>
       </TouchableOpacity>
 
-      {/* tap fare to open popup */}
       <TouchableOpacity onPress={onOpenCustom}>
-        <AccessibleText style={styles.value}>{value}</AccessibleText>
+        <AccessibleText style={[styles.value, { color: colors.text }]}>{value}</AccessibleText>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onIncrease}>
-        <AccessibleText style={styles.button}>+</AccessibleText>
+        <AccessibleText style={[styles.button, { color: colors.text }]}>+</AccessibleText>
       </TouchableOpacity>
     </View>
   );
@@ -38,7 +47,7 @@ export default FareCounter;
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#1E1F22",
+    // backgroundColor: "#1E1F22", // REMOVED
     borderRadius: 40,
     alignItems: "center",
     paddingHorizontal: 12,
@@ -46,12 +55,12 @@ const styles = StyleSheet.create({
   },
   button: {
     fontSize: 26,
-    color: "white",
+    // color: "white", // REMOVED
     paddingHorizontal: 8,
   },
   value: {
     fontSize: 18,
-    color: "white",
+    // color: "white", // REMOVED
     width: 40,
     textAlign: "center",
     fontWeight: "600",

@@ -1,25 +1,29 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import Logo from "./Logo";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 interface Props {
   onMenuPress?: () => void;
 }
 
 const TopBar: React.FC<Props> = ({ onMenuPress }) => {
+  const { colors } = useAccessibility();
+
   return (
     <View style={styles.topBar}>
-      {/* Menu Button */}
-      <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
-        <View style={styles.menuLine} />
-        <View style={styles.menuLine} />
-        <View style={styles.menuLine} />
+      <TouchableOpacity
+        style={[styles.menuButton, { backgroundColor: colors.surface }]}
+        onPress={onMenuPress}
+      >
+        {/* Menu Lines use Primary Color (Green/Blue) */}
+        <View style={[styles.menuLine, { backgroundColor: colors.primary }]} />
+        <View style={[styles.menuLine, { backgroundColor: colors.primary }]} />
+        <View style={[styles.menuLine, { backgroundColor: colors.primary }]} />
       </TouchableOpacity>
 
-      {/* Logo */}
       <Logo size={32} />
 
-      {/* Right side spacer */}
       <View style={{ width: 40 }} />
     </View>
   );
@@ -38,20 +42,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 10,
   },
-
   menuButton: {
     width: 40,
     height: 40,
     justifyContent: "space-evenly",
-    backgroundColor: "rgba(37, 40, 43, 1)", // #25282B
+    // backgroundColor: "rgba(37, 40, 43, 1)", // REMOVED
     borderRadius: 10,
     padding: 7,
   },
-
   menuLine: {
     width: "100%",
     height: 5,
-    backgroundColor: "#3dff73",
+    // backgroundColor: "#3dff73", // REMOVED
     borderRadius: 4,
   },
 });

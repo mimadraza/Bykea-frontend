@@ -3,6 +3,7 @@ import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import AccessibleText from "./AccessibleText";
 import { useTranslation } from "react-i18next"; // 1. Import this
+import { useAccessibility } from "../context/AccessibilityContext"; // 1. Import
 
 export interface DriverOffer {
   id: string;
@@ -20,8 +21,9 @@ interface Props {
 
 const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
   const { t } = useTranslation(); // 2. Get the translate function
+  const { colors } = useAccessibility(); // 2. Get Colors
   return (
-    <View style={styles.card}>
+     <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
       {/* Avatar */}
       <View style={styles.avatarWrapper}>
         {offer.avatarUrl ? (
@@ -47,10 +49,17 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
 
       {/* Buttons */}
       <View style={styles.btnCol}>
-        <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
+        <TouchableOpacity
+                  // 3. Update Accept Button to use Primary Color
+                  style={[styles.acceptBtn, { backgroundColor: colors.primary }]}
+                  onPress={onAccept}
+                >
           <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
+        <TouchableOpacity
+                  style={[styles.rejectBtn, { backgroundColor: colors.surface }]} // Optional: Theme the reject button too
+                  onPress={onReject}
+                >
           <AccessibleText style={styles.rejectText}>{t("reject_btn")}</AccessibleText>
         </TouchableOpacity>
       </View>

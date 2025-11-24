@@ -4,7 +4,7 @@
 import { LatLng } from "../Component/LeafletMap";
 
 // YOUR REAL ORS KEY GOES HERE:
-const OPENROUTESERVICE_API_KEY = "Enter_API_KEY_HERE";
+const OPENROUTESERVICE_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjU5NWE2ZjlkODhiNDRjMjFhNmFkZWYzYWVkYjgyODNkIiwiaCI6Im11cm11cjY0In0=";
 
 const ORS_BASE = "https://api.openrouteservice.org";
 

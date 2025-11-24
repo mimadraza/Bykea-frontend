@@ -24,12 +24,24 @@ export type RootStackParamList = {
   Login: undefined;
   OTP: undefined;
   Home: undefined;
-  Pickup: undefined;
-  ChooseRide: { destination: string };
-  RideRequest: {
-    rideType: "Motorbike" | "Car" | "RickShaw";
-    fare: number;
-  };
+    Pickup: undefined;
+   ChooseRide: {
+     destination: string;
+   };
+   RideRequest: {
+     rideType: "Motorbike" | "Car" | "RickShaw";
+     fare: number;
+     destination: string;
+   };
+   RideInProgress: {
+       driver: { name: string; rating: number };
+       fare: number;
+       destination: string;
+       rideType : string;
+       start: { lat: number; lng: number };
+       end: { lat: number; lng: number };
+       geometry: { lat: number; lng: number }[];
+   };
   Profile: undefined;
   RideHistory: undefined;
   Helpline: undefined;

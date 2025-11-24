@@ -60,9 +60,6 @@ const PickupScreen: React.FC = () => {
     }).start();
   };
 
-  // --------------------------------------
-  // Live Typing Autosuggest
-  // --------------------------------------
   async function handleTyping(text: string) {
     setDestination(text);
 
@@ -81,9 +78,6 @@ const PickupScreen: React.FC = () => {
     }
   }
 
-  // --------------------------------------
-  // Selecting a suggestion
-  // --------------------------------------
   async function handleSelectSuggestion(item: string) {
     setDestination(item);
     setSuggestions([]);
@@ -94,16 +88,13 @@ const PickupScreen: React.FC = () => {
 
       const route = await getRoute(HOME_START, dest);
 
-      // 1. Update route on pickup screen
       mapRef.current?.setRoute({
         start: HOME_START,
         end: dest,
         geometry: route.geometry
       });
 
-      // 2. Navigate to ChooseRide screen
       navigation.navigate("ChooseRide", { destination: item });
-
     } catch (err) {
       console.warn("Destination selection error:", err);
     }
@@ -116,7 +107,6 @@ const PickupScreen: React.FC = () => {
         ref={mapRef}
         style={styles.map}
         onLoadEnd={() => {
-          // Initialize map view + pickup marker only
           mapRef.current?.setInitialView(HOME_START, 15);
           mapRef.current?.setOnlyPickup(HOME_START);
         }}
@@ -124,9 +114,10 @@ const PickupScreen: React.FC = () => {
 
       <TopBar onMenuPress={toggleSidebar} />
 
+      {/* SIDEBAR + OVERLAY */}
       {open && (
         <>
-          <TouchableOpacity style={styles.overlay} onPress={toggleSidebar} />
+          <TouchableOpacity style={styles.sidebarOverlay} onPress={toggleSidebar} />
           <Sidebar slideAnim={slideAnim} onClose={toggleSidebar} />
         </>
       )}
@@ -149,7 +140,6 @@ const PickupScreen: React.FC = () => {
           style={styles.input}
         />
 
-        {/* Suggestions */}
         {destination.length > 0 && suggestions.length > 0 && (
           <FlatList
             data={suggestions}
@@ -165,7 +155,6 @@ const PickupScreen: React.FC = () => {
           />
         )}
 
-        {/* Recent Locations (hidden while typing) */}
         {destination.length === 0 && (
           <View style={styles.recentContainer}>
             <AccessibleText style={styles.recentTitle}>
@@ -201,13 +190,15 @@ const styles = StyleSheet.create({
     zIndex: 1
   },
 
-  overlay: {
+  /* SIDEBAR ALWAYS ON TOP OF EVERYTHING */
+  sidebarOverlay: {
     position: "absolute",
     top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
-    zIndex: 40
+    zIndex: 90
   },
 
+  /* Floating Search Card MUST stay under sidebar */
   overlayCard: {
     position: "absolute",
     top: 90,
@@ -215,7 +206,8 @@ const styles = StyleSheet.create({
     right: 20,
     padding: 18,
     borderRadius: 20,
-    zIndex: 50
+    zIndex: 20,       // ← FIXED (was 50)
+    elevation: 20
   },
 
   input: {

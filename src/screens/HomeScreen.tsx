@@ -21,18 +21,11 @@ import LeafletMap, {
   LatLng
 } from "../Component/LeafletMap";
 
-import { geocodeAddress, getRoute } from "../services/openRouteService";
-
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HOME_START: LatLng = {
   lat: 24.934963,
   lng: 67.156854,
-};
-
-const HOME_DEFAULT_DEST: LatLng = {
-  lat: 24.93805,
-  lng: 67.15091,
 };
 
 const HomeScreen: React.FC = () => {
@@ -55,22 +48,10 @@ const HomeScreen: React.FC = () => {
     }).start();
   };
 
-  // Load default route on first mount
+  // REMOVE DEFAULT ROUTE — Only set initial camera + pickup marker
   useEffect(() => {
-    const loadDefaultRoute = async () => {
-      try {
-        const route = await getRoute(HOME_START, HOME_DEFAULT_DEST);
-        mapRef.current?.setRoute({
-          start: HOME_START,
-          end: HOME_DEFAULT_DEST,
-          geometry: route.geometry,
-        });
-      } catch (err) {
-        console.warn("Default route error:", err);
-      }
-    };
-
-    loadDefaultRoute();
+    mapRef.current?.setInitialView(HOME_START, 15);
+    mapRef.current?.setOnlyPickup(HOME_START);
   }, []);
 
   return (
@@ -87,7 +68,6 @@ const HomeScreen: React.FC = () => {
 
       {open && <Sidebar slideAnim={slideAnim} onClose={toggleSidebar} />}
 
-      {/* Decorative background for bottom area */}
       <View
         style={[
           styles.middleContainer,
@@ -96,7 +76,6 @@ const HomeScreen: React.FC = () => {
       />
 
       <View style={styles.overlayButtons}>
-
         <TouchableOpacity
           style={[
             styles.largeCard,

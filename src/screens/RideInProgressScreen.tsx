@@ -1,42 +1,78 @@
-import React, { useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, StyleSheet, TouchableOpacity, Image, TextInput } from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "./html_script";
 
 import TopBar from "../Component/TopBar";
-import BackButton from "../Component/BackButton";
+import AccessibleText from "../Component/AccessibleText";
 
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import AccessibleText from "../Component/AccessibleText";
-import { useTranslation } from "react-i18next"; // Import this
-import { useAccessibility } from "../context/AccessibilityContext";
 
+import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RideInProgressScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation(); // Get the translate function
-  const { colors, borderWidth } = useAccessibility();
+  const { t } = useTranslation();
+  const { colors } = useAccessibility();
+
   const route = useRoute();
-  const { driver } = route.params as {
-    driver: {
-      name: string;
-      rating: number;
-    };
+
+  const { driver, from, start, end, geometry } = route.params as {
+    driver: { name: string; rating: number };
+    from?: string;
+    start: { lat: number; lng: number };
+    end: { lat: number; lng: number };
+    geometry: { lat: number; lng: number }[];
+  };
+
+  const [rideFinished, setRideFinished] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [feedback, setFeedback] = useState("");
+
+  const sendRouteToMap = () => {
+    if (!mapRef.current || !start || !end || !geometry?.length) return;
+
+    mapRef.current.postMessage(
+      JSON.stringify({
+        type: "setRoute",
+        start,
+        end,
+        geometry,
+      })
+    );
+
+    setTimeout(() => {
+      mapRef.current?.postMessage(
+        JSON.stringify({
+          type: "animateRoute",
+        })
+      );
+    }, 600);
+  };
+
+  const handleCancel = () => {
+    if (from) {
+      navigation.replace("ChooseRide", { destination: "" });
+      return;
+    }
+
+    navigation.navigate("ChooseRide", { destination: "" });
+  };
+
+  const submitFeedback = () => {
+    console.log("Rating:", rating);
+    console.log("Feedback:", feedback);
+    navigation.navigate("Home", { destination: "" });
   };
 
   return (
     <View style={styles.container}>
-      {/* MAP BACKGROUND */}
       <WebView
         ref={mapRef}
         source={{ html: html_script }}
@@ -45,50 +81,70 @@ const RideInProgressScreen: React.FC = () => {
         domStorageEnabled
         originWhitelist={["*"]}
         mixedContentMode="always"
+        onLoadEnd={sendRouteToMap}
+        onMessage={(event) => {
+          const data = JSON.parse(event.nativeEvent.data);
+          if (data.type === "rideFinished") {
+            setRideFinished(true);
+          }
+        }}
       />
 
-      {/* TOP BAR */}
       <TopBar onMenuPress={() => console.log("Menu")} />
 
-
-      {/* BOTTOM CARD */}
       <View style={styles.bottomCard}>
-        {/* Driver Header */}
-        <View style={styles.driverRow}>
-          <Image
-            source={require("../assets/user.png")}
-            style={styles.driverImg}
-          />
+        {rideFinished ? (
+          <>
+            <AccessibleText style={styles.finishedTitle}>Ride Finished</AccessibleText>
 
-          <View style={{ flex: 1 }}>
-            <AccessibleText style={styles.statusText}>{t("status_on_way")}</AccessibleText>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <AccessibleText style={styles.driverName}>{driver.name}</AccessibleText>
-              <AccessibleText style={styles.star}>⭐ {driver.rating}</AccessibleText>
+            <View style={styles.ratingRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                  <AccessibleText
+                    style={{
+                      fontSize: 32,
+                      color: rating >= star ? "#FFD700" : "#555",
+                      marginHorizontal: 4,
+                    }}
+                  >
+                    ★
+                  </AccessibleText>
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
-        </View>
 
-        {/* Share + Contact */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.actionBtn}>
-            <AccessibleText style={styles.actionIcon}>🔄</AccessibleText>
-            <AccessibleText style={styles.actionText}>{t("action_share")}</AccessibleText>
-          </TouchableOpacity>
+            <TextInput
+              value={feedback}
+              onChangeText={setFeedback}
+              placeholder="Leave your feedback..."
+              placeholderTextColor="#888"
+              multiline
+              style={styles.feedbackBox}
+            />
 
-          <TouchableOpacity style={styles.actionBtn}>
-            <AccessibleText style={styles.actionIcon}>📞</AccessibleText>
-            <AccessibleText style={styles.actionText}>{t("action_contact")}</AccessibleText>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.submitBtn} onPress={submitFeedback}>
+              <AccessibleText style={styles.submitText}>Submit</AccessibleText>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <View style={styles.driverRow}>
+              <Image source={require("../assets/user.png")} style={styles.driverImg} />
 
-        {/* Cancel */}
-        <TouchableOpacity
-          style={styles.cancelBtn}
-          onPress = { () => navigation.navigate("ChooseRide", { destination: "" })}
-        >
-          <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
-        </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <AccessibleText style={styles.statusText}>{t("status_on_way")}</AccessibleText>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <AccessibleText style={styles.driverName}>{driver.name}</AccessibleText>
+                  <AccessibleText style={styles.star}>⭐ {driver.rating}</AccessibleText>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
+              <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </View>
   );
@@ -104,13 +160,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     zIndex: 1,
-  },
-
-  backButtonWrapper: {
-    position: "absolute",
-    top: 110,
-    left: 20,
-    zIndex: 30,
   },
 
   bottomCard: {
@@ -158,30 +207,6 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  actionRow: {
-    backgroundColor: "#1F2124",
-    borderRadius: 18,
-    padding: 20,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-  },
-
-  actionBtn: {
-    alignItems: "center",
-  },
-
-  actionIcon: {
-    fontSize: 28,
-    marginBottom: 6,
-    color: "white",
-  },
-
-  actionText: {
-    color: "#ccc",
-    fontSize: 13,
-  },
-
   cancelBtn: {
     backgroundColor: "#D62828",
     paddingVertical: 16,
@@ -191,6 +216,43 @@ const styles = StyleSheet.create({
   cancelText: {
     textAlign: "center",
     color: "white",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+
+  finishedTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+
+  ratingRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+
+  feedbackBox: {
+    backgroundColor: "#1F2124",
+    color: "white",
+    borderRadius: 12,
+    padding: 12,
+    minHeight: 100,
+    textAlignVertical: "top",
+    marginBottom: 20,
+  },
+
+  submitBtn: {
+    backgroundColor: "#3DFF73",
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+
+  submitText: {
+    textAlign: "center",
+    color: "#000",
     fontWeight: "800",
     fontSize: 16,
   },

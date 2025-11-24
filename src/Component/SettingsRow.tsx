@@ -1,15 +1,30 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+} from "react-native";
 import ToggleSwitch from "./ToggleSwitch";
 import AccessibleText from "./AccessibleText";
-import { useAccessibility } from "../context/AccessibilityContext"; // Import hook
+import { useAccessibility } from "../context/AccessibilityContext";
 
 interface RowProps {
   title: string;
   subtitle?: string;
-  value: boolean;
-  onChange: () => void;
+
+  // For toggle rows
+  value?: boolean;
+  onChange?: () => void;
+
+  // For button rows (Screen Reader)
+  valueText?: string;
+  onPress?: () => void;
+
   icon?: React.ReactNode;
+
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: "button" | "switch";
 }
 
 const SettingsRow: React.FC<RowProps> = ({
@@ -17,43 +32,84 @@ const SettingsRow: React.FC<RowProps> = ({
   subtitle,
   value,
   onChange,
+  valueText,
+  onPress,
   icon,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole,
 }) => {
-  // 1. Get the current theme colors
   const { colors, borderWidth } = useAccessibility();
 
+  // Determine mode
+  const isToggle = typeof value === "boolean" && !!onChange;
+  const isButton = !!onPress;
+
+  const RowComponent = isButton ? Pressable : View;
+
   return (
-    // 2. Override the static background color with the theme color
-    <View style={[styles.row, {
-        backgroundColor: colors.surface,
-        // Add border logic here to match the card style
-        borderColor: colors.border,
-        borderWidth: borderWidth,
-        // 1px normally, 3px in HC
-        borderBottomWidth: borderWidth // Ensure bottom is thick too
-        }]}>
+    <RowComponent
+      style={[
+        styles.row,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          borderWidth: borderWidth,
+          borderBottomWidth: borderWidth,
+        },
+      ]}
+      onPress={isButton ? onPress : undefined}
+      accessible={true}
+      accessibilityRole={
+        accessibilityRole || (isButton ? "button" : isToggle ? "switch" : "text")
+      }
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={isToggle ? { checked: value } : undefined}
+    >
+      {/* LEFT SIDE */}
       <View style={styles.left}>
-        {/* Optional: Make the icon background blend with the theme */}
-        <View style={[styles.iconPlaceholder, { backgroundColor: colors.background }]}>
+        {/* Icon */}
+        <View
+          style={[
+            styles.iconPlaceholder,
+            { backgroundColor: colors.background },
+          ]}
+        >
           {icon}
         </View>
 
+        {/* Title + Subtitle */}
         <View>
-          {/* 3. Override text colors dynamically */}
           <AccessibleText style={[styles.title, { color: colors.text }]}>
             {title}
           </AccessibleText>
 
           {subtitle && (
-            <AccessibleText style={[styles.subtitle, { color: colors.textSecondary }]}>
+            <AccessibleText
+              style={[styles.subtitle, { color: colors.textSecondary }]}
+            >
               {subtitle}
             </AccessibleText>
           )}
         </View>
       </View>
 
-      <ToggleSwitch value={value} onChange={onChange} />
-    </View>
+      {/* RIGHT SIDE — SWITCH OR VALUE TEXT */}
+      {isToggle && <ToggleSwitch value={value!} onChange={onChange!} />}
+
+      {isButton && valueText && (
+        <AccessibleText
+          style={{
+            fontSize: 14,
+            color: colors.textSecondary,
+            marginRight: 6,
+          }}
+        >
+          {valueText}
+        </AccessibleText>
+      )}
+    </RowComponent>
   );
 };
 
@@ -62,7 +118,6 @@ export default SettingsRow;
 const styles = StyleSheet.create({
   row: {
     width: "100%",
-    // backgroundColor: "#343b43", // Removed: Handled dynamically in the component
     padding: 16,
     borderRadius: 12,
     marginBottom: 18,
@@ -81,7 +136,6 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 8,
-    // backgroundColor: "#20252b", // Removed: Handled dynamically
     justifyContent: "center",
     alignItems: "center",
   },
@@ -89,12 +143,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "600",
-    // color: "white", // Removed: Handled dynamically so it turns black in light mode
   },
 
   subtitle: {
     fontSize: 12,
-    // color: "#9ea3aa", // Removed: Handled dynamically
     marginTop: 2,
   },
 });

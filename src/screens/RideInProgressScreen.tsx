@@ -27,6 +27,7 @@ const RideInProgressScreen: React.FC = () => {
   const { t } = useTranslation(); // Get the translate function
   const { colors, borderWidth } = useAccessibility();
   const route = useRoute();
+  const { destination } = route.params || {};
   const { driver } = route.params as {
     driver: {
       name: string;
@@ -85,7 +86,11 @@ const RideInProgressScreen: React.FC = () => {
         {/* Cancel */}
         <TouchableOpacity
           style={styles.cancelBtn}
-          onPress = { () => navigation.navigate("ChooseRide", { destination: "" })}
+          onPress={() =>
+            navigation.replace("ChooseRide", {
+              destination: destination ?? "",
+            })
+          }
         >
           <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
         </TouchableOpacity>

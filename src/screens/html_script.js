@@ -1,51 +1,113 @@
+// Component/html_script.js
 const html_script = `
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="initial-scale=1.0">
-  <title>Leaflet Dark Mode</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
+  <title>Leaflet Map</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    html, body { margin:0; padding:0; background:#000; }
-    #mapid { width:100%; height:100vh; }
-
-    /* ⭐ Make ArcGIS dark tiles even darker */
-    .leaflet-tile {
-      filter: brightness(0.65) contrast(1.2);
-    }
+    html, body { margin:0; padding:0; height:100%; background:#fff; }
+    #map { width:100%; height:100vh; }
+    .leaflet-tile { filter: brightness(1.05) contrast(1.05) saturate(0.9); }
   </style>
 </head>
 
 <body>
-  <div id="mapid"></div>
+  <div id="map"></div>
 
   <script>
-    // Initial map location (Karachi)
-    var mymap = L.map('mapid', {
-        zoomControl: false
-    }).setView([24.934963139905765, 67.15685431719373], 23);
+    var map = L.map('map', {
+      zoomControl: false,
+      attributionControl: false
+    }).setView([24.934963, 67.156854], 15);
 
-    // Dark Gray Basemap (free, works in WebView)
-    L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-      {
-        maxZoom: 16,
-        attribution: "© Esri, HERE, Garmin, FAO, NOAA, USGS"
-      }
-    ).addTo(mymap);
+    L.tileLayer("https://tile.openstreetmap.de/{z}/{x}/{y}.png", {
+      maxZoom: 20
+    }).addTo(map);
 
-    // Click popup
-    var popup = L.popup();
-    mymap.on("click", function(e) {
-      popup
-        .setLatLng(e.latlng)
-        .setContent("Location: " + e.latlng.toString())
-        .openOn(mymap);
+    var routeLine = null;
+    var startMarker = null;
+    var endMarker = null;
+
+    var pickupIcon = L.divIcon({
+      html: '<div style="width:14px;height:14px;background:#000;border-radius:50%;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.4);"></div>',
+      iconSize: [14,14],
+      iconAnchor: [7,7]
     });
+
+    var dropIcon = L.divIcon({
+      html: '<div style="width:14px;height:14px;background:#fff;border-radius:50%;border:3px solid #000;box-shadow:0 0 4px rgba(0,0,0,0.4);"></div>',
+      iconSize: [14,14],
+      iconAnchor: [7,7]
+    });
+
+    function clearAll() {
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+      if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+      if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+    }
+
+    function renderRoute(start, end, geometry) {
+      clearAll();
+
+      startMarker = L.marker([start.lat, start.lng], { icon: pickupIcon }).addTo(map);
+      endMarker = L.marker([end.lat, end.lng], { icon: dropIcon }).addTo(map);
+
+      var latLngs = geometry.map(p => [p.lat, p.lng]);
+
+      routeLine = L.polyline(latLngs, {
+        color: "#007bff",
+        weight: 5,
+        opacity: 0.92
+      }).addTo(map);
+
+      map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+    }
+
+    function sendMessage(msg) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+      }
+    }
+
+    map.on("click", function(e) {
+      sendMessage({ type:"press", lat:e.latlng.lat, lng:e.latlng.lng });
+    });
+
+    function handleMessage(event) {
+      try {
+        var msg = JSON.parse(event.data);
+
+        if (msg.type === "setInitialView" && msg.center) {
+          map.setView([msg.center.lat, msg.center.lng], msg.zoom || 15);
+        }
+
+        if (msg.type === "setOnlyPickup" && msg.start) {
+          clearAll();
+          startMarker = L.marker([msg.start.lat, msg.start.lng], { icon: pickupIcon }).addTo(map);
+          map.setView([msg.start.lat, msg.start.lng], 15);
+        }
+
+        if (msg.type === "setRoute") {
+          renderRoute(msg.start, msg.end, msg.geometry);
+        }
+
+        if (msg.type === "clearRoute") {
+          clearAll();
+        }
+
+      } catch(err) {
+        console.log("Parse error:", err);
+      }
+    }
+
+    document.addEventListener("message", handleMessage); // Android
+    window.addEventListener("message", handleMessage);   // iOS
   </script>
 </body>
 </html>

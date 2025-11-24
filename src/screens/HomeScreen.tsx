@@ -1,44 +1,86 @@
-import React, { useRef, useState } from "react";
-import { View, TouchableOpacity, StyleSheet, Animated } from "react-native";
-import { WebView } from "react-native-webview";
+// screens/HomeScreen.tsx
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 
-import html_script from "./html_script";
 import TopBar from "../Component/TopBar";
 import Sidebar from "../Component/Sidebar";
-import { RootStackParamList } from "../navigation/AppNavigator";
 import AccessibleText from "../Component/AccessibleText";
 import { useAccessibility } from "../context/AccessibilityContext";
+import { RootStackParamList } from "../navigation/AppNavigator";
+
+import LeafletMap, {
+  LeafletMapHandle,
+  LatLng
+} from "../Component/LeafletMap";
+
+import { geocodeAddress, getRoute } from "../services/openRouteService";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
+
+const HOME_START: LatLng = {
+  lat: 24.934963,
+  lng: 67.156854,
+};
+
+const HOME_DEFAULT_DEST: LatLng = {
+  lat: 24.93805,
+  lng: 67.15091,
+};
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const { t } = useTranslation();
   const { colors, borderWidth } = useAccessibility();
-  const mapRef = useRef<WebView>(null);
 
   const [open, setOpen] = useState(false);
   const slideAnim = useState(new Animated.Value(-260))[0];
 
+  const mapRef = useRef<LeafletMapHandle>(null);
+
   const toggleSidebar = () => {
     const toValue = open ? -260 : 0;
     setOpen(!open);
-    Animated.timing(slideAnim, { toValue, duration: 250, useNativeDriver: true }).start();
+    Animated.timing(slideAnim, {
+      toValue,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
   };
+
+  // Load default route on first mount
+  useEffect(() => {
+    const loadDefaultRoute = async () => {
+      try {
+        const route = await getRoute(HOME_START, HOME_DEFAULT_DEST);
+        mapRef.current?.setRoute({
+          start: HOME_START,
+          end: HOME_DEFAULT_DEST,
+          geometry: route.geometry,
+        });
+      } catch (err) {
+        console.warn("Default route error:", err);
+      }
+    };
+
+    loadDefaultRoute();
+  }, []);
 
   return (
     <View style={styles.container}>
-      <WebView
+      <LeafletMap
         ref={mapRef}
-        source={{ html: html_script }}
         style={styles.map}
-        javaScriptEnabled
-        domStorageEnabled
-        originWhitelist={["*"]}
-        mixedContentMode="always"
+        onMapPress={(lat, lng) => {
+          console.log("Map pressed:", lat, lng);
+        }}
       />
 
       <TopBar onMenuPress={toggleSidebar} />
@@ -46,17 +88,23 @@ const HomeScreen: React.FC = () => {
       {open && <Sidebar slideAnim={slideAnim} onClose={toggleSidebar} />}
 
       {/* Decorative background for bottom area */}
-      <View style={[styles.middleContainer, { backgroundColor: colors.sheetBackground }]} />
+      <View
+        style={[
+          styles.middleContainer,
+          { backgroundColor: colors.sheetBackground },
+        ]}
+      />
 
       <View style={styles.overlayButtons}>
+
         <TouchableOpacity
           style={[
             styles.largeCard,
             {
               backgroundColor: colors.cardBackground,
               borderColor: colors.border,
-              borderWidth: borderWidth
-            }
+              borderWidth: borderWidth,
+            },
           ]}
           onPress={() => navigation.navigate("Pickup")}
         >
@@ -72,8 +120,8 @@ const HomeScreen: React.FC = () => {
               {
                 backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
-                borderWidth: borderWidth
-              }
+                borderWidth: borderWidth,
+              },
             ]}
             onPress={() => navigation.navigate("Helpline")}
           >
@@ -88,8 +136,8 @@ const HomeScreen: React.FC = () => {
               {
                 backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
-                borderWidth: borderWidth
-              }
+                borderWidth: borderWidth,
+              },
             ]}
             onPress={() => navigation.navigate("DeliveryDetails")}
           >

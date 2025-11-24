@@ -42,17 +42,24 @@ const ChooseRideScreen: React.FC = () => {
     useState<keyof typeof fareCount | null>(null);
   const [tempFare, setTempFare] = useState("");
 
+  // NEW: store coords + geometry safely
+  const [destCoords, setDestCoords] = useState<LatLng | null>(null);
+  const [routeGeometry, setRouteGeometry] = useState<any[]>([]);
+
   // Load the path when this screen opens
   useEffect(() => {
     async function loadRoute() {
-      const destCoords = await geocodeAddress(destination);
-      if (!destCoords) return;
+      const coords = await geocodeAddress(destination);
+      if (!coords) return;
 
-      const route = await getRoute(HOME_START, destCoords);
+      setDestCoords(coords);
+
+      const route = await getRoute(HOME_START, coords);
+      setRouteGeometry(route.geometry);
 
       mapRef.current?.setRoute({
         start: HOME_START,
-        end: destCoords,
+        end: coords,
         geometry: route.geometry
       });
     }
@@ -102,7 +109,10 @@ const ChooseRideScreen: React.FC = () => {
             />
           </View>
           <View
-            style={[styles.dottedLine, { backgroundColor: colors.textSecondary }]}
+            style={[
+              styles.dottedLine,
+              { backgroundColor: colors.textSecondary }
+            ]}
           />
           <AccessibleText style={{ fontSize: 20, color: colors.text }}>
             ➤
@@ -134,9 +144,13 @@ const ChooseRideScreen: React.FC = () => {
       </View>
 
       {/* RIDE SELECTION SHEET */}
-      <View style={[styles.bottomSheet, { backgroundColor: colors.sheetBackground }]}>
+      <View
+        style={[styles.bottomSheet, { backgroundColor: colors.sheetBackground }]}
+      >
         <View style={styles.sheetHandle} />
-        <AccessibleText style={styles.sheetTitle}>{t("sheet_title")}</AccessibleText>
+        <AccessibleText style={styles.sheetTitle}>
+          {t("sheet_title")}
+        </AccessibleText>
 
         <View style={{ maxHeight: 280 }}>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -170,7 +184,10 @@ const ChooseRideScreen: React.FC = () => {
                       {t(`${ride.name.toLowerCase()}_name`)}
                     </AccessibleText>
                     <AccessibleText
-                      style={[styles.rideDesc, { color: colors.textSecondary }]}
+                      style={[
+                        styles.rideDesc,
+                        { color: colors.textSecondary }
+                      ]}
                     >
                       {ride.desc}
                     </AccessibleText>
@@ -203,12 +220,17 @@ const ChooseRideScreen: React.FC = () => {
         {/* Find Ride Button */}
         <TouchableOpacity
           style={[styles.findRideButton, { backgroundColor: colors.primary }]}
-          onPress={() =>
+          onPress={() => {
+            if (!destCoords || routeGeometry.length === 0) return;
+
             navigation.navigate("RideRequest", {
               rideType: selectedRide,
-              fare: fareCount[selectedRide]
-            })
-          }
+              fare: fareCount[selectedRide],
+              start: HOME_START,
+              end: destCoords,
+              geometry: routeGeometry
+            });
+          }}
         >
           <AccessibleText style={styles.findRideText}>
             {t("find_ride_btn")}
@@ -234,7 +256,10 @@ const ChooseRideScreen: React.FC = () => {
             </AccessibleText>
 
             <View
-              style={[styles.popupInputBox, { backgroundColor: colors.inputBackground }]}
+              style={[
+                styles.popupInputBox,
+                { backgroundColor: colors.inputBackground }
+              ]}
             >
               <AccessibleTextInput
                 style={[styles.popupInput, { color: colors.text }]}
@@ -261,7 +286,9 @@ const ChooseRideScreen: React.FC = () => {
                 onPress={applyCustomFare}
                 style={[styles.okButton, { backgroundColor: colors.primary }]}
               >
-                <AccessibleText style={styles.okText}>{t("ok_btn")}</AccessibleText>
+                <AccessibleText style={styles.okText}>
+                  {t("ok_btn")}
+                </AccessibleText>
               </TouchableOpacity>
             </View>
           </View>
@@ -273,6 +300,7 @@ const ChooseRideScreen: React.FC = () => {
 
 export default ChooseRideScreen;
 
+/* --- STYLES UNCHANGED --- */
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { position: "absolute", width: "100%", height: "100%", zIndex: 1 },

@@ -1,25 +1,21 @@
 // src/screens/RideRequestScreen.tsx
 import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "./html_script";
 
 import TopBar from "../Component/TopBar";
 import BackButton from "../Component/BackButton";
 import FareCounter from "../Component/FareCounter";
-import DriverOfferCard, {
-  DriverOffer,
-} from "../Component/DriverOfferCard";
+import DriverOfferCard, { DriverOffer } from "../Component/DriverOfferCard";
 import AccessibleText from "../Component/AccessibleText";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { useTranslation } from "react-i18next"; // Import this
+import { useTranslation } from "react-i18next";
 import { useAccessibility } from "../context/AccessibilityContext";
+
+import { LatLng } from "../Component/LeafletMap";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -40,21 +36,39 @@ const RideRequestScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
   const { destination } = route.params || {};
-  const { t } = useTranslation(); // Get the translate function
+  const { t } = useTranslation();
   const { colors, borderWidth } = useAccessibility();
-
-  const { rideType, fare: initialFare } = route.params as {
-    rideType: "Motorbike" | "Car" | "RickShaw";
-    fare: number;
-  };
 
   const mapRef = useRef<WebView>(null);
 
-  // Dynamically set fare from previous screen
+  // ⬇️ NOW ALSO RECEIVE start / end / geometry FROM ChooseRide
+  const { rideType, fare: initialFare, start, end, geometry } = route.params as {
+    rideType: "Motorbike" | "Car" | "RickShaw";
+    fare: number;
+    start: LatLng;
+    end: LatLng;
+    geometry: LatLng[];
+  };
+
+  // Dynamic fare
   const [fare, setFare] = useState(initialFare);
 
-  // driver popups
+  // Driver offers
   const [offers, setOffers] = useState<DriverOffer[]>([]);
+
+  // Send the route to the WebView once it finishes loading
+  const sendRouteToMap = () => {
+    if (!mapRef.current || !start || !end || !geometry?.length) return;
+
+    mapRef.current.postMessage(
+      JSON.stringify({
+        type: "setRoute",
+        start,
+        end,
+        geometry,
+      })
+    );
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -64,8 +78,9 @@ const RideRequestScreen: React.FC = () => {
         const random =
           DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
 
-        // We replace the hardcoded ETA text here for translation:
-        const translatedEta = `${random.eta.split(' ')[0]} ${t("driver_offer_eta")}`;
+        const translatedEta = `${random.eta.split(" ")[0]} ${t(
+          "driver_offer_eta"
+        )}`;
 
         const newOffer: DriverOffer = {
           id: Date.now().toString() + Math.random().toString(16).slice(2),
@@ -83,7 +98,7 @@ const RideRequestScreen: React.FC = () => {
               (Date.now() + 1).toString() +
               Math.random().toString(16).slice(2),
             ...another,
-            eta: `${another.eta.split(' ')[0]} ${t("driver_offer_eta")}`,
+            eta: `${another.eta.split(" ")[0]} ${t("driver_offer_eta")}`,
           };
           return [...current, newOffer, second];
         }
@@ -103,11 +118,14 @@ const RideRequestScreen: React.FC = () => {
     navigation.navigate("RideInProgress", {
       driver: offer,
       fare,
+      from: "RiderRequest",
+      start,
+      end,
+      geometry,
     });
 
     setOffers((prev) => prev.filter((o) => o.id !== offer.id));
   };
-
 
   return (
     <View style={styles.container}>
@@ -120,6 +138,7 @@ const RideRequestScreen: React.FC = () => {
         domStorageEnabled
         originWhitelist={["*"]}
         mixedContentMode="always"
+        onLoadEnd={sendRouteToMap} // ⬅️ DRAW ROUTE WHEN READY
       />
 
       {/* TOP BAR */}
@@ -137,16 +156,16 @@ const RideRequestScreen: React.FC = () => {
         ))}
       </View>
 
-
       {/* BOTTOM RIDE SUMMARY */}
       <View style={styles.bottomCard}>
-        {/* Translate rideType name if needed, assuming the key is already in i18n for the full name */}
         <AccessibleText style={styles.rideTitle}>
           {t(`${rideType.toLowerCase()}_name`)}
         </AccessibleText>
 
         <View style={styles.rideIconWrapper}>
-          <AccessibleText style={styles.rideIcon}>{RIDE_META[rideType].icon}</AccessibleText>
+          <AccessibleText style={styles.rideIcon}>
+            {RIDE_META[rideType].icon}
+          </AccessibleText>
         </View>
 
         <View style={styles.counterRow}>
@@ -158,10 +177,6 @@ const RideRequestScreen: React.FC = () => {
           />
         </View>
 
-        <TouchableOpacity style={styles.keepLookingBtn}>
-          <AccessibleText style={styles.keepLookingText}>{t("keep_looking_btn")}</AccessibleText>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={styles.cancelBtn}
           onPress={() =>
@@ -169,7 +184,9 @@ const RideRequestScreen: React.FC = () => {
                 destination: destination ?? "",
               })}
         >
-          <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
+          <AccessibleText style={styles.cancelText}>
+            {t("cancel_ride_btn")}
+          </AccessibleText>
         </TouchableOpacity>
       </View>
     </View>

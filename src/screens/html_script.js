@@ -1,4 +1,3 @@
-// Component/html_script.js
 const html_script = `
 <!DOCTYPE html>
 <html>
@@ -34,6 +33,9 @@ const html_script = `
     var startMarker = null;
     var endMarker = null;
 
+    var fullGeometry = [];
+    var animationTimer = null;
+
     var pickupIcon = L.divIcon({
       html: '<div style="width:14px;height:14px;background:#000;border-radius:50%;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.4);"></div>',
       iconSize: [14,14],
@@ -52,13 +54,17 @@ const html_script = `
       if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
     }
 
-    function renderRoute(start, end, geometry) {
-      clearAll();
+    function stopAnimation() {
+      if (animationTimer) {
+        clearInterval(animationTimer);
+        animationTimer = null;
+      }
+    }
 
-      startMarker = L.marker([start.lat, start.lng], { icon: pickupIcon }).addTo(map);
-      endMarker = L.marker([end.lat, end.lng], { icon: dropIcon }).addTo(map);
+    function drawReducedRoute(geom) {
+      if (routeLine) map.removeLayer(routeLine);
 
-      var latLngs = geometry.map(p => [p.lat, p.lng]);
+      var latLngs = geom.map(p => [p.lat, p.lng]);
 
       routeLine = L.polyline(latLngs, {
         color: "#007bff",
@@ -66,7 +72,45 @@ const html_script = `
         opacity: 0.92
       }).addTo(map);
 
-      map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+      if (latLngs.length > 1) {
+        map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+      }
+    }
+
+    function animateRoute() {
+      stopAnimation();
+
+      animationTimer = setInterval(() => {
+        if (fullGeometry.length <= 2) {
+          stopAnimation();
+
+          // NOTIFY REACT NATIVE THAT RIDE ENDED
+          sendMessage({ type: "rideFinished" });
+
+          return;
+        }
+
+        var next = fullGeometry[0];
+        if (startMarker) {
+          startMarker.setLatLng([next.lat, next.lng]);
+        }
+
+        fullGeometry.shift();
+        drawReducedRoute(fullGeometry);
+
+      }, 100);
+    }
+
+    function renderRoute(start, end, geometry) {
+      clearAll();
+      stopAnimation();
+
+      fullGeometry = geometry.slice();
+
+      startMarker = L.marker([start.lat, start.lng], { icon: pickupIcon }).addTo(map);
+      endMarker = L.marker([end.lat, end.lng], { icon: dropIcon }).addTo(map);
+
+      drawReducedRoute(fullGeometry);
     }
 
     function sendMessage(msg) {
@@ -89,6 +133,7 @@ const html_script = `
 
         if (msg.type === "setOnlyPickup" && msg.start) {
           clearAll();
+          stopAnimation();
           startMarker = L.marker([msg.start.lat, msg.start.lng], { icon: pickupIcon }).addTo(map);
           map.setView([msg.start.lat, msg.start.lng], 15);
         }
@@ -97,7 +142,12 @@ const html_script = `
           renderRoute(msg.start, msg.end, msg.geometry);
         }
 
+        if (msg.type === "animateRoute") {
+          animateRoute();
+        }
+
         if (msg.type === "clearRoute") {
+          stopAnimation();
           clearAll();
         }
 
@@ -106,8 +156,8 @@ const html_script = `
       }
     }
 
-    document.addEventListener("message", handleMessage); // Android
-    window.addEventListener("message", handleMessage);   // iOS
+    document.addEventListener("message", handleMessage);
+    window.addEventListener("message", handleMessage);
   </script>
 </body>
 </html>

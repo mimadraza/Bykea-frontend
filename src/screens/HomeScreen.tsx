@@ -5,7 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  FlatList,
 } from "react-native";
+
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
@@ -13,13 +15,16 @@ import { useTranslation } from "react-i18next";
 import TopBar from "../Component/TopBar";
 import Sidebar from "../Component/Sidebar";
 import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 import { useAccessibility } from "../context/AccessibilityContext";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import LeafletMap, {
   LeafletMapHandle,
-  LatLng
+  LatLng,
 } from "../Component/LeafletMap";
+
+import { geocodeAddress, getRoute } from "../services/openRouteService";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -28,15 +33,23 @@ const HOME_START: LatLng = {
   lng: 67.156854,
 };
 
+type Mode = "ride" | "delivery";
+
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation();
-  const { colors, borderWidth } = useAccessibility();
+  const { colors } = useAccessibility();
 
   const [open, setOpen] = useState(false);
-  const slideAnim = useState(new Animated.Value(-260))[0];
+  const [slideAnim] = useState(new Animated.Value(-260));
 
   const mapRef = useRef<LeafletMapHandle>(null);
+
+  const [mode, setMode] = useState<Mode>("ride");
+
+  // Ride search
+  const [destination, setDestination] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const toggleSidebar = () => {
     const toValue = open ? -260 : 0;
@@ -48,83 +61,248 @@ const HomeScreen: React.FC = () => {
     }).start();
   };
 
-  // REMOVE DEFAULT ROUTE — Only set initial camera + pickup marker
   useEffect(() => {
     mapRef.current?.setInitialView(HOME_START, 15);
     mapRef.current?.setOnlyPickup(HOME_START);
   }, []);
 
+  // ============================
+  // RIDE SEARCH HANDLERS
+  // ============================
+  async function handleTyping(text: string) {
+    setDestination(text);
+
+    if (!text.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const loc = await geocodeAddress(text);
+      if (loc) setSuggestions([text]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSelectSuggestion(item: string) {
+    setDestination(item);
+    setSuggestions([]);
+
+    try {
+      setLoading(true);
+      const dest = await geocodeAddress(item);
+      if (!dest) return;
+
+      const route = await getRoute(HOME_START, dest);
+
+      mapRef.current?.setRoute({
+        start: HOME_START,
+        end: dest,
+        geometry: route.geometry,
+      });
+
+      navigation.navigate("ChooseRide", { destination: item });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <LeafletMap
-        ref={mapRef}
-        style={styles.map}
-        onMapPress={(lat, lng) => {
-          console.log("Map pressed:", lat, lng);
-        }}
-      />
+      {/* MAP */}
+      <LeafletMap ref={mapRef} style={styles.map} />
 
+      {/* TOP BAR */}
       <TopBar onMenuPress={toggleSidebar} />
 
+      {/* SIDEBAR */}
       {open && <Sidebar slideAnim={slideAnim} onClose={toggleSidebar} />}
 
+      {/* MAP CONTROLS */}
+      <View style={styles.mapControls}>
+        <TouchableOpacity style={styles.mapControlButton}>
+          <AccessibleText style={styles.mapControlText}>+</AccessibleText>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.mapControlButton}>
+          <AccessibleText style={styles.mapControlText}>−</AccessibleText>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.mapControlButton}>
+          <AccessibleText style={styles.mapControlText}>⚙︎</AccessibleText>
+        </TouchableOpacity>
+      </View>
+
+      {/* BOTTOM SHEET BACKGROUND */}
       <View
         style={[
-          styles.middleContainer,
+          styles.sheetBackground,
           { backgroundColor: colors.sheetBackground },
         ]}
       />
 
-      <View style={styles.overlayButtons}>
-        <TouchableOpacity
-          style={[
-            styles.largeCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-              borderWidth: borderWidth,
-            },
-          ]}
-          onPress={() => navigation.navigate("Pickup")}
-        >
-          <AccessibleText style={styles.largeCardTitle}>
-            {t("ride_card_title")}
-          </AccessibleText>
-        </TouchableOpacity>
+      {/* BOTTOM SHEET CONTENT */}
+      <View style={styles.sheetContent}>
+        <View style={styles.handleContainer}>
+          <View style={styles.handle} />
+        </View>
 
-        <View style={styles.row}>
+        <AccessibleText style={styles.sheetTitle}>
+          {mode === "ride" ? "Where would you like to go?" : "Send a parcel"}
+        </AccessibleText>
+
+        {/* MODE SWITCHER */}
+        <View style={styles.modeToggle}>
           <TouchableOpacity
-            style={[
-              styles.smallCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-                borderWidth: borderWidth,
-              },
-            ]}
-            onPress={() => navigation.navigate("Helpline")}
+            style={[styles.modeButton, mode === "ride" && styles.modeButtonActive]}
+            onPress={() => setMode("ride")}
           >
-            <AccessibleText style={styles.smallCardTitle}>
-              {t("helpline_card_title")}
+            <AccessibleText
+              style={[
+                styles.modeButtonText,
+                mode === "ride" && styles.modeButtonTextActive,
+              ]}
+            >
+              Ride
             </AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
-              styles.smallCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-                borderWidth: borderWidth,
-              },
+              styles.modeButton,
+              mode === "delivery" && styles.modeButtonActive,
             ]}
-            onPress={() => navigation.navigate("DeliveryDetails")}
+            onPress={() => setMode("delivery")}
           >
-            <AccessibleText style={styles.smallCardTitle}>
-              {t("delivery_card_title")}
+            <AccessibleText
+              style={[
+                styles.modeButtonText,
+                mode === "delivery" && styles.modeButtonTextActive,
+              ]}
+            >
+              Delivery
             </AccessibleText>
           </TouchableOpacity>
         </View>
+
+        {/* ============================
+            RIDE MODE
+        ============================ */}
+  {mode === "ride" && (
+    <>
+      {/* Search bar */}
+      <View style={styles.searchBar}>
+        <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
+        <AccessibleTextInput
+          value={destination}
+          onChangeText={handleTyping}
+          placeholder="Search for a destination"
+          style={styles.searchInput}
+        />
+      </View>
+
+      {/* Result area */}
+      <View style={styles.suggestionContainer}>
+
+        {/* SHOW SUGGESTIONS WHEN TYPING */}
+        {destination.trim().length > 0 ? (
+          <FlatList
+            data={suggestions}
+            keyExtractor={(_, i) => i.toString()}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleSelectSuggestion(item)}>
+                <AccessibleText style={styles.suggestionItem}>
+                  {item}
+                </AccessibleText>
+              </TouchableOpacity>
+            )}
+          />
+        ) : (
+          <>
+            {/* SAVED LOCATION 1 */}
+            <TouchableOpacity
+              style={styles.savedItem}
+              onPress={() =>
+                handleSelectSuggestion("IBA University Road, Karachi")
+              }
+            >
+              <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
+              <View style={styles.savedTextWrapper}>
+                <AccessibleText style={styles.savedTitle}>
+                  IBA University Road
+                </AccessibleText>
+                <AccessibleText style={styles.savedSubtitle}>
+                  Karachi, Pakistan
+                </AccessibleText>
+              </View>
+              <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+            </TouchableOpacity>
+
+            {/* SAVED LOCATION 2 */}
+            <TouchableOpacity
+              style={styles.savedItem}
+              onPress={() =>
+                handleSelectSuggestion("Saima Mall, North Nazimabad, Karachi")
+              }
+            >
+              <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
+              <View style={styles.savedTextWrapper}>
+                <AccessibleText style={styles.savedTitle}>
+                  Saima Mall
+                </AccessibleText>
+                <AccessibleText style={styles.savedSubtitle}>
+                  North Nazimabad, Karachi
+                </AccessibleText>
+              </View>
+              <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+            </TouchableOpacity>
+          </>
+        )}
+
+      </View>
+    </>
+  )}
+        {/* ============================
+            DELIVERY MODE (PLACEHOLDERS ONLY)
+        ============================ */}
+        {mode === "delivery" && (
+          <>
+            {/* PICKUP PLACEHOLDER */}
+            <View style={styles.searchBar}>
+              <AccessibleText style={styles.searchIcon}>🟢</AccessibleText>
+              <AccessibleTextInput
+                placeholder="Pickup location"
+                style={styles.searchInput}
+              />
+            </View>
+
+            {/* DROPOFF PLACEHOLDER */}
+            <View style={styles.searchBar}>
+              <AccessibleText style={styles.searchIcon}>📍</AccessibleText>
+              <AccessibleTextInput
+                placeholder="Drop-off location"
+                style={styles.searchInput}
+              />
+            </View>
+
+            {/* PARCEL DETAILS */}
+            <TouchableOpacity style={styles.deliveryItemRow}>
+              <AccessibleText style={styles.deliveryItemIcon}>📦</AccessibleText>
+              <View style={styles.deliveryItemTextWrapper}>
+                <AccessibleText style={styles.deliveryItemTitle}>
+                  Parcel Details
+                </AccessibleText>
+                <AccessibleText style={styles.deliveryItemSubtitle}>
+                  Add weight, size, and category
+                </AccessibleText>
+              </View>
+              <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </View>
   );
@@ -132,49 +310,150 @@ const HomeScreen: React.FC = () => {
 
 export default HomeScreen;
 
+/* =====================================
+   STYLES
+===================================== */
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { position: "absolute", width: "100%", height: "100%", zIndex: 1 },
-  middleContainer: {
+
+  mapControls: {
     position: "absolute",
-    top: "48%",
-    width: "100%",
-    height: "60%",
-    borderRadius: 20,
-    zIndex: 10,
-  },
-  overlayButtons: {
-    position: "absolute",
-    top: "50%",
-    width: "100%",
-    paddingHorizontal: 20,
+    right: 16,
+    top: 120,
     zIndex: 20,
   },
-  largeCard: {
+  mapControlButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    backgroundColor: "#1A1D23",
+  },
+  mapControlText: { fontSize: 18, fontWeight: "700", color: "white" },
+
+  sheetBackground: {
+    position: "absolute",
+    bottom: 0,
     width: "100%",
-    height: 140,
-    borderRadius: 20,
-    marginBottom: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    height: "52%",
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    zIndex: 10,
   },
-  largeCardTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
+
+ sheetContent: {
+   position: "absolute",
+   bottom: 0,
+   width: "100%",
+   height: "52%",        // 🔑 Match sheetBackground height so top stays fixed
+   paddingHorizontal: 20,
+   paddingTop: 12,
+   paddingBottom: 24,
+   zIndex: 20,
+ },
+
+  handleContainer: { alignItems: "center", marginBottom: 4 },
+  handle: {
+    width: 50,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#2E3340",
   },
-  row: {
+
+  sheetTitle: {
+    fontSize: 25,
+    fontWeight: "700",
+    marginBottom: 4,
+    color: "white",
+  },
+
+  modeToggle: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    borderRadius: 5,
+    padding: 4,
+    marginBottom: 10,
+    backgroundColor: "#1A1D23",
   },
-  smallCard: {
-    width: "48%",
-    height: 120,
-    borderRadius: 18,
-    justifyContent: "center",
+  modeButton: {
+    flex: 1,
+    borderRadius: 5,
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
   },
-  smallCardTitle: {
-    fontSize: 20,
+  modeButtonActive: {
+    backgroundColor: "#2E3340",
+  },
+  modeButtonText: {
+    fontSize: 14,
     fontWeight: "600",
+    color: "#9CA3AF",
+  },
+  modeButtonTextActive: { color: "#FFFFFF" },
+
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 50,
+    marginBottom: 12,
+    backgroundColor: "#1A1D23",
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 10,
+    color: "#9CA3AF",
+  },
+  searchInput: {
+    flex: 1,
+    height: "100%",
+    color: "white",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+  },
+
+  suggestionItem: {
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    color: "white",
+  },
+
+  savedItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#374151",
+  },
+  savedIcon: { fontSize: 20, marginRight: 12, color: "white" },
+  savedTextWrapper: { flex: 1 },
+  savedTitle: { fontSize: 15, fontWeight: "600", color: "white" },
+  savedSubtitle: { fontSize: 13, color: "#9CA3AF", marginTop: 2 },
+  chevron: { fontSize: 18, color: "#9CA3AF" },
+
+  deliveryItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#374151",
+  },
+  deliveryItemIcon: {
+    fontSize: 20,
+    marginRight: 12,
+    color: "#fff",
+  },
+  deliveryItemTextWrapper: { flex: 1 },
+  deliveryItemTitle: { fontSize: 15, fontWeight: "600", color: "white" },
+  deliveryItemSubtitle: { fontSize: 13, color: "#9CA3AF", marginTop: 2 },
+  suggestionContainer: {
+    flex: 1,          // 🔑 fills remaining space under the search bar
+    marginTop: 4,
   },
 });

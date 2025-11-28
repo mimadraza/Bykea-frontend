@@ -1,18 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import BackButton from "../Component/BackButton";
+import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 import FareCounter from "../Component/FareCounter";
+
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import AccessibleText from "../Component/AccessibleText";
-import AccessibleTextInput from "../Component/AccessibleTextInput";
-import { useTranslation } from "react-i18next";
 import { useAccessibility } from "../context/AccessibilityContext";
 
 import LeafletMap, {
   LeafletMapHandle,
-  LatLng
+  LatLng,
 } from "../Component/LeafletMap";
 
 import { geocodeAddress, getRoute } from "../services/openRouteService";
@@ -25,28 +24,27 @@ const ChooseRideScreen: React.FC = () => {
   const mapRef = useRef<LeafletMapHandle>(null);
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
-  const { t } = useTranslation();
-  const { colors, borderWidth } = useAccessibility();
+  const { colors } = useAccessibility();
 
   const { destination } = route.params as { destination: string };
 
   const [fareCount, setFareCount] = useState({
-    Motorbike: 146,
-    Car: 512,
-    RickShaw: 512
+    Motorbike: 120,
+    Rickshaw: 250,
+    Car: 400,
   });
 
-  const [selectedRide, setSelectedRide] = useState("Motorbike");
+  const [selectedRide, setSelectedRide] =
+    useState<"Motorbike" | "Rickshaw" | "Car">("Motorbike");
+
   const [customVisible, setCustomVisible] = useState(false);
   const [editingRide, setEditingRide] =
     useState<keyof typeof fareCount | null>(null);
   const [tempFare, setTempFare] = useState("");
 
-  // NEW: store coords + geometry safely
   const [destCoords, setDestCoords] = useState<LatLng | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<any[]>([]);
 
-  // Load the path when this screen opens
   useEffect(() => {
     async function loadRoute() {
       const coords = await geocodeAddress(destination);
@@ -60,7 +58,7 @@ const ChooseRideScreen: React.FC = () => {
       mapRef.current?.setRoute({
         start: HOME_START,
         end: coords,
-        geometry: route.geometry
+        geometry: route.geometry,
       });
     }
     loadRoute();
@@ -75,220 +73,175 @@ const ChooseRideScreen: React.FC = () => {
   const applyCustomFare = () => {
     if (editingRide) {
       const num = Number(tempFare);
-      if (!isNaN(num)) setFareCount({ ...fareCount, [editingRide]: num });
+      if (!isNaN(num))
+        setFareCount({
+          ...fareCount,
+          [editingRide]: num,
+        });
     }
     setCustomVisible(false);
   };
 
   const rideOptions = [
-    { name: "Motorbike", desc: t("motorbike_desc"), icon: "🛵" },
-    { name: "Car", desc: t("car_desc"), icon: "🚗" },
-    { name: "RickShaw", desc: t("rickshaw_desc"), icon: "🛺" }
+    {
+      name: "Motorbike" as const,
+      icon: "🏍️",
+      time: "4 min",
+      people: "1",
+    },
+    {
+      name: "Rickshaw" as const,
+      icon: "🛺",
+      time: "6 min",
+      people: "3",
+    },
+    {
+      name: "Car" as const,
+      icon: "🚗",
+      time: "8 min",
+      people: "4",
+    },
   ];
 
   return (
     <View style={styles.container}>
-      {/* MAP */}
       <LeafletMap ref={mapRef} style={styles.map} />
 
-      {/* LOCATION BOX */}
-      <View
-        style={[
-          styles.locationCard,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-            borderWidth
-          }
-        ]}
-      >
+      {/* LOCATION BOX (Top) */}
+      <View style={styles.locationCard}>
         <View style={styles.markerColumn}>
-          <View style={[styles.circleOuter, { borderColor: colors.text }]}>
-            <View
-              style={[styles.circleInner, { backgroundColor: colors.text }]}
-            />
+          <View style={styles.pickupDotOuter}>
+            <View style={styles.pickupDotInner} />
           </View>
-          <View
-            style={[
-              styles.dottedLine,
-              { backgroundColor: colors.textSecondary }
-            ]}
-          />
-          <AccessibleText style={{ fontSize: 20, color: colors.text }}>
-            ➤
-          </AccessibleText>
+
+          <View style={styles.verticalLine} />
+
+          <View style={styles.dropoffCircle}>
+            <AccessibleText style={{ color: "#0df259" }}>📍</AccessibleText>
+          </View>
         </View>
 
         <View style={{ flex: 1 }}>
-          <View
-            style={[styles.inputRow, { backgroundColor: colors.inputBackground }]}
-          >
-            <AccessibleText style={styles.inputAccessibleText}>
-              {t("pickup_location")}
+          {/* Pickup */}
+          <View style={styles.inputRow}>
+            <AccessibleText style={styles.locationText}>
+              Jauhar Block 7
             </AccessibleText>
           </View>
 
-          <View
-            style={[styles.inputRow, { backgroundColor: colors.inputBackground }]}
-          >
-            <AccessibleText style={styles.inputAccessibleText}>
+          {/* Destination */}
+          <View style={styles.inputRow}>
+            <AccessibleText style={styles.locationText}>
               {destination}
             </AccessibleText>
           </View>
         </View>
       </View>
 
-      {/* Back button */}
-      <View style={styles.backButtonWrapper}>
-        <BackButton onPress={() => navigation.replace("Pickup")} />
-      </View>
-
-      {/* RIDE SELECTION SHEET */}
-      <View
-        style={[styles.bottomSheet, { backgroundColor: colors.sheetBackground }]}
-      >
+      {/* Bottom Sheet */}
+      <View style={styles.bottomSheet}>
         <View style={styles.sheetHandle} />
-        <AccessibleText style={styles.sheetTitle}>
-          {t("sheet_title")}
-        </AccessibleText>
 
-        <View style={{ maxHeight: 280 }}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {rideOptions.map((ride) => (
+        <AccessibleText style={styles.sheetTitle}>Ride</AccessibleText>
+
+        <ScrollView style={{ maxHeight: 330 }}>
+          {rideOptions.map((ride) => {
+            const selected = selectedRide === ride.name;
+            return (
               <TouchableOpacity
                 key={ride.name}
+                onPress={() => setSelectedRide(ride.name)}
                 style={[
                   styles.rideCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor:
-                      selectedRide === ride.name ? colors.primary : colors.border,
-                    borderWidth: selectedRide === ride.name ? 2 : borderWidth
-                  }
+                  selected && { borderColor: "#00FF66", borderWidth: 2 },
                 ]}
-                onPress={() => setSelectedRide(ride.name)}
               >
+                {/* Left Side */}
                 <View style={styles.rideLeft}>
-                  <View
-                    style={[
-                      styles.iconPlaceholder,
-                      { backgroundColor: colors.inputBackground }
-                    ]}
-                  >
-                    <AccessibleText style={{ fontSize: 28 }}>
+                  <View style={styles.rideIconBox}>
+                    <AccessibleText style={{ fontSize: 32 }}>
                       {ride.icon}
                     </AccessibleText>
                   </View>
+
                   <View>
                     <AccessibleText style={styles.rideName}>
-                      {t(`${ride.name.toLowerCase()}_name`)}
+                      {ride.name}
                     </AccessibleText>
-                    <AccessibleText
-                      style={[
-                        styles.rideDesc,
-                        { color: colors.textSecondary }
-                      ]}
-                    >
-                      {ride.desc}
+
+                    <AccessibleText style={styles.rideInfoText}>
+                      {ride.time} • {ride.people}
                     </AccessibleText>
                   </View>
                 </View>
 
-                <FareCounter
-                  value={fareCount[ride.name]}
-                  onIncrease={() =>
-                    setFareCount({
-                      ...fareCount,
-                      [ride.name]: fareCount[ride.name] + 1
-                    })
-                  }
-                  onDecrease={() =>
-                    setFareCount({
-                      ...fareCount,
-                      [ride.name]: Math.max(0, fareCount[ride.name] - 1)
-                    })
-                  }
-                  onOpenCustom={() =>
-                    openCustomFare(ride.name as keyof typeof fareCount)
-                  }
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+                {/* Right Side */}
+                <View>
+                  <AccessibleText style={styles.ridePrice}>
+                    Rs. {fareCount[ride.name]}
+                  </AccessibleText>
 
-        {/* Find Ride Button */}
+                  <TouchableOpacity
+                    onPress={() => openCustomFare(ride.name)}
+                  >
+                    <AccessibleText style={styles.optionsText}>
+                      Options
+                    </AccessibleText>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Bottom Button */}
         <TouchableOpacity
-          style={[styles.findRideButton, { backgroundColor: colors.primary }]}
+          style={styles.confirmButton}
           onPress={() => {
             if (!destCoords || routeGeometry.length === 0) return;
-
             navigation.navigate("RideRequest", {
               rideType: selectedRide,
               fare: fareCount[selectedRide],
               start: HOME_START,
               end: destCoords,
-              geometry: routeGeometry
+              geometry: routeGeometry,
             });
           }}
         >
-          <AccessibleText style={styles.findRideText}>
-            {t("find_ride_btn")}
+          <AccessibleText style={styles.confirmButtonText}>
+            Confirm {selectedRide}
           </AccessibleText>
         </TouchableOpacity>
       </View>
 
-      {/* CUSTOM FARE POPUP */}
+      {/* Popup for Custom Fare */}
       {customVisible && (
         <View style={styles.popupOverlay}>
-          <View
-            style={[
-              styles.popupBox,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-                borderWidth
-              }
-            ]}
-          >
+          <View style={styles.popupBox}>
             <AccessibleText style={styles.popupTitle}>
-              {t("enter_fare_popup_title")}
+              Enter Custom Fare
             </AccessibleText>
 
-            <View
-              style={[
-                styles.popupInputBox,
-                { backgroundColor: colors.inputBackground }
-              ]}
-            >
+            <View style={styles.popupInputBox}>
               <AccessibleTextInput
-                style={[styles.popupInput, { color: colors.text }]}
                 value={tempFare}
                 onChangeText={setTempFare}
                 keyboardType="numeric"
-                placeholder={t("enter_amount_placeholder")}
+                style={styles.popupInput}
               />
             </View>
 
             <View style={styles.popupButtons}>
               <TouchableOpacity
                 onPress={() => setCustomVisible(false)}
-                style={styles.cancelButton}
               >
-                <AccessibleText
-                  style={[styles.cancelText, { color: colors.textSecondary }]}
-                >
-                  {t("cancel_btn")}
+                <AccessibleText style={styles.popupCancel}>
+                  Cancel
                 </AccessibleText>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={applyCustomFare}
-                style={[styles.okButton, { backgroundColor: colors.primary }]}
-              >
-                <AccessibleText style={styles.okText}>
-                  {t("ok_btn")}
-                </AccessibleText>
+              <TouchableOpacity onPress={applyCustomFare}>
+                <AccessibleText style={styles.popupOK}>OK</AccessibleText>
               </TouchableOpacity>
             </View>
           </View>
@@ -300,11 +253,13 @@ const ChooseRideScreen: React.FC = () => {
 
 export default ChooseRideScreen;
 
-/* --- STYLES UNCHANGED --- */
+/* ======================
+   STYLES — MATCH UI EXACTLY
+======================== */
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  map: { position: "absolute", width: "100%", height: "100%", zIndex: 1 },
-  backButtonWrapper: { position: "absolute", top: 160, left: 20, zIndex: 30 },
+  map: { position: "absolute", width: "100%", height: "100%" },
+
   locationCard: {
     position: "absolute",
     top: 10,
@@ -313,117 +268,185 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 22,
     flexDirection: "row",
-    zIndex: 40
+    backgroundColor: "#1B212B",
+    zIndex: 50,
   },
-  markerColumn: { alignItems: "center", marginRight: 14 },
-  circleOuter: {
+
+  markerColumn: {
+    alignItems: "center",
+    marginRight: 14,
+  },
+
+  pickupDotOuter: {
     width: 18,
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
+    borderColor: "#00FF66",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
-  circleInner: { width: 8, height: 8, borderRadius: 4 },
-  dottedLine: { width: 2, height: 50, marginVertical: 6 },
+  pickupDotInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#00FF66",
+  },
+
+  verticalLine: {
+    width: 2,
+    height: 50,
+    backgroundColor: "#32523E",
+    marginVertical: 6,
+  },
+
+  dropoffCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#00FF66",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   inputRow: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
+    backgroundColor: "#2E3340",
+    borderRadius: 12,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
   },
-  inputAccessibleText: { fontSize: 15, flex: 1 },
+  locationText: { color: "white", fontSize: 15 },
+
   bottomSheet: {
     position: "absolute",
     bottom: 0,
     width: "100%",
     padding: 20,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    zIndex: 50,
-    paddingBottom: 30,
-    maxHeight: "68%"
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    backgroundColor: "#1B212B",
+    maxHeight: "70%",
   },
+
   sheetHandle: {
-    width: 60,
+    width: 50,
     height: 5,
-    backgroundColor: "#555",
+    backgroundColor: "#345",
     borderRadius: 3,
     alignSelf: "center",
-    marginBottom: 15
+    marginBottom: 15,
   },
-  sheetTitle: { fontSize: 20, fontWeight: "700", marginBottom: 16 },
+
+  sheetTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 15,
+  },
+
   rideCard: {
     flexDirection: "row",
-    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderRadius: 16,
-    justifyContent: "space-between",
-    marginBottom: 14
+    backgroundColor: "#13251A",
+    borderWidth: 1,
+    borderColor: "#222",
+    marginBottom: 12,
+    alignItems: "center",
   },
+
   rideLeft: { flexDirection: "row", alignItems: "center" },
-  iconPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+
+  rideIconBox: {
+    width: 55,
+    height: 55,
+    borderRadius: 10,
+    backgroundColor: "#213427",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16
+    marginRight: 14,
   },
-  rideName: { fontSize: 17, fontWeight: "700" },
-  rideDesc: { fontSize: 13 },
-  findRideButton: {
+
+  rideName: {
+    color: "white",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+
+  rideInfoText: {
+    color: "#91A596",
+    fontSize: 13,
+    marginTop: 3,
+  },
+
+  ridePrice: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "right",
+  },
+
+  optionsText: {
+    color: "#00FF66",
+    marginTop: 4,
+    fontSize: 13,
+  },
+
+  confirmButton: {
+    marginTop: 10,
+    backgroundColor: "#00FF66",
     paddingVertical: 18,
-    borderRadius: 14,
-    marginTop: 10
+    borderRadius: 12,
   },
-  findRideText: {
-    color: "#1A1A1A",
-    fontSize: 18,
-    fontWeight: "800",
-    textAlign: "center"
+
+  confirmButtonText: {
+    textAlign: "center",
+    fontWeight: "700",
+    fontSize: 17,
+    color: "black",
   },
+
   popupOverlay: {
     position: "absolute",
     top: 0,
-    left: 0,
-    right: 0,
     bottom: 0,
+    right: 0,
+    left: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 500
   },
+
   popupBox: {
     width: "75%",
-    borderRadius: 16,
     padding: 20,
-    alignItems: "center"
+    backgroundColor: "#1A1A1A",
+    borderRadius: 15,
   },
-  popupTitle: { fontSize: 18, fontWeight: "700", marginBottom: 12 },
+
+  popupTitle: {
+    color: "white",
+    fontSize: 18,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+
   popupInputBox: {
-    width: "100%",
+    backgroundColor: "#2A2A2A",
+    padding: 10,
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 20
+    marginBottom: 20,
   },
-  popupInput: { fontSize: 16, paddingVertical: 6 },
+  popupInput: { color: "white", fontSize: 16 },
+
   popupButtons: {
-    width: "100%",
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 8
+    justifyContent: "space-between",
   },
-  cancelButton: { paddingHorizontal: 12, paddingVertical: 6, marginRight: 10 },
-  cancelText: { fontSize: 16 },
-  okButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10
-  },
-  okText: { color: "#1A1A1A", fontWeight: "700", fontSize: 16 }
+
+  popupCancel: { color: "#AAA", fontSize: 16 },
+  popupOK: { color: "#00FF66", fontSize: 16 },
 });

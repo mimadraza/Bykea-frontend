@@ -140,7 +140,7 @@ const ChooseRideScreen: React.FC = () => {
 
       {/* Back button */}
       <View style={styles.backButtonWrapper}>
-        <BackButton onPress={() => navigation.navigate("Pickup")} />
+        <BackButton onPress={() => navigation.replace("Pickup")} />
       </View>
 
       {/* RIDE SELECTION SHEET */}

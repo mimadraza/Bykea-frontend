@@ -35,6 +35,7 @@ const RIDE_META = {
 const RideRequestScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
+  const { destination } = route.params || {};
   const { t } = useTranslation();
   const { colors, borderWidth } = useAccessibility();
 
@@ -178,7 +179,10 @@ const RideRequestScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.cancelBtn}
-          onPress={() => navigation.goBack()}
+          onPress={() =>
+              navigation.replace("ChooseRide", {
+                destination: destination ?? "",
+              })}
         >
           <AccessibleText style={styles.cancelText}>
             {t("cancel_ride_btn")}

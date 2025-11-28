@@ -69,8 +69,6 @@ const AppNavigator: React.FC = () => {
 
           options={{ headerShown: false }}
         />
-
-        {/* ✅ FIX: Profile MUST be INSIDE the navigator */}
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="RideHistory" component={RideHistoryScreen} />
         <Stack.Screen name="RideInProgress" component={RideInProgressScreen} />

@@ -22,6 +22,7 @@ const RideInProgressScreen: React.FC = () => {
   const { colors } = useAccessibility();
 
   const route = useRoute();
+  const { destination } = route.params || {};
 
   const { driver, from, start, end, geometry } = route.params as {
     driver: { name: string; rating: number };

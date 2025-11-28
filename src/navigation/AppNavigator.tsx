@@ -5,10 +5,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AccessibilityScreen from "../screens/AccessibilityScreen";
 import SplashScreen from "../screens/SplashScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import LoginScreen from "../screens/LoginScreen";
+import AuthScreen from "../screens/AuthScreen";
 import OTPVerificationScreen from "../screens/OTPVerificationScreen";
 import HomeScreen from "../screens/HomeScreen";
-import PickupScreen from "../screens/PickupScreen";
 import ChooseRideScreen from "../screens/ChooseRideScreen";
 import RideRequestScreen from "../screens/RideRequestScreen";
 import RideHistoryScreen from "../screens/RideHistoryScreen";
@@ -21,11 +20,10 @@ import SearchingRiderScreen from "../screens/SearchingRiderScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
-  Login: undefined;
-  OTP: undefined;
   Home: undefined;
-    Pickup: undefined;
-   ChooseRide: {
+  Pickup: undefined;
+  Accessibility : undefined;
+  ChooseRide: {
      destination: string;
    };
    RideRequest: {
@@ -57,11 +55,13 @@ const AppNavigator: React.FC = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="OTP" component={OTPVerificationScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+          name="Auth"
+          component={AuthScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="Accessibility" component={AccessibilityScreen} />
-        <Stack.Screen name="Pickup" component={PickupScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="ChooseRide" component={ChooseRideScreen} />
         <Stack.Screen
           name="RideRequest"

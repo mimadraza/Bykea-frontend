@@ -5,7 +5,6 @@ import { WebView } from "react-native-webview";
 import html_script from "./html_script";
 
 import TopBar from "../Component/TopBar";
-import BackButton from "../Component/BackButton";
 import FareCounter from "../Component/FareCounter";
 import DriverOfferCard, { DriverOffer } from "../Component/DriverOfferCard";
 import AccessibleText from "../Component/AccessibleText";
@@ -20,10 +19,10 @@ import { LatLng } from "../Component/LeafletMap";
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const DRIVER_POOL: Omit<DriverOffer, "id">[] = [
-  { name: "Asif Gul", eta: "5 mins away", rating: 4.95 },
-  { name: "Imran Khan", eta: "7 mins away", rating: 4.80 },
-  { name: "Ali Raza", eta: "3 mins away", rating: 4.70 },
-  { name: "Bilal Sheikh", eta: "9 mins away", rating: 4.60 },
+  { name: "Asif Gul", eta: "5 mins away", rating: 4.95, price: 100 },
+  { name: "Imran Khan", eta: "7 mins away", rating: 4.80, price: 120 },
+  { name: "Ali Raza", eta: "3 mins away", rating: 4.70, price: 90 },
+  { name: "Bilal Sheikh", eta: "9 mins away", rating: 4.60, price: 110 },
 ];
 
 const RIDE_META = {
@@ -37,11 +36,10 @@ const RideRequestScreen: React.FC = () => {
   const route = useRoute();
   const { destination } = route.params || {};
   const { t } = useTranslation();
-  const { colors, borderWidth } = useAccessibility();
+  const { colors } = useAccessibility();
 
   const mapRef = useRef<WebView>(null);
 
-  // ⬇️ NOW ALSO RECEIVE start / end / geometry FROM ChooseRide
   const { rideType, fare: initialFare, start, end, geometry } = route.params as {
     rideType: "Motorbike" | "Car" | "RickShaw";
     fare: number;
@@ -50,13 +48,9 @@ const RideRequestScreen: React.FC = () => {
     geometry: LatLng[];
   };
 
-  // Dynamic fare
   const [fare, setFare] = useState(initialFare);
-
-  // Driver offers
   const [offers, setOffers] = useState<DriverOffer[]>([]);
 
-  // Send the route to the WebView once it finishes loading
   const sendRouteToMap = () => {
     if (!mapRef.current || !start || !end || !geometry?.length) return;
 
@@ -75,31 +69,30 @@ const RideRequestScreen: React.FC = () => {
       setOffers((current) => {
         if (current.length >= 4) return current;
 
-        const random =
-          DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
+        const random = DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
 
-        const translatedEta = `${random.eta.split(" ")[0]} ${t(
-          "driver_offer_eta"
-        )}`;
+        const translatedEta = `${random.eta.split(" ")[0]} ${t("driver_offer_eta")}`;
 
         const newOffer: DriverOffer = {
           id: Date.now().toString() + Math.random().toString(16).slice(2),
-          ...random,
+          name: random.name,
           eta: translatedEta,
+          rating: random.rating,
+          price: random.price,
         };
 
-        // sometimes add 2 offers
         const addTwo = Math.random() < 0.4;
         if (addTwo) {
-          const another =
-            DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
+          const another = DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
+
           const second: DriverOffer = {
-            id:
-              (Date.now() + 1).toString() +
-              Math.random().toString(16).slice(2),
-            ...another,
+            id: (Date.now() + 1).toString() + Math.random().toString(16).slice(2),
+            name: another.name,
             eta: `${another.eta.split(" ")[0]} ${t("driver_offer_eta")}`,
+            rating: another.rating,
+            price: another.price,
           };
+
           return [...current, newOffer, second];
         }
 
@@ -117,7 +110,7 @@ const RideRequestScreen: React.FC = () => {
   const handleAccept = (offer: DriverOffer) => {
     navigation.navigate("RideInProgress", {
       driver: offer,
-      fare,
+      fare: offer.price, // <-- Use driver’s actual offered fare
       from: "RiderRequest",
       start,
       end,
@@ -129,7 +122,6 @@ const RideRequestScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* MAP */}
       <WebView
         ref={mapRef}
         source={{ html: html_script }}
@@ -138,13 +130,11 @@ const RideRequestScreen: React.FC = () => {
         domStorageEnabled
         originWhitelist={["*"]}
         mixedContentMode="always"
-        onLoadEnd={sendRouteToMap} // ⬅️ DRAW ROUTE WHEN READY
+        onLoadEnd={sendRouteToMap}
       />
 
-      {/* TOP BAR */}
-      <TopBar onMenuPress={() => console.log("menu")} />
+      <TopBar onMenuPress={() => {}} />
 
-      {/* Driver popups */}
       <View style={styles.offersContainer}>
         {offers.map((offer) => (
           <DriverOfferCard
@@ -156,7 +146,6 @@ const RideRequestScreen: React.FC = () => {
         ))}
       </View>
 
-      {/* BOTTOM RIDE SUMMARY */}
       <View style={styles.bottomCard}>
         <AccessibleText style={styles.rideTitle}>
           {t(`${rideType.toLowerCase()}_name`)}
@@ -173,16 +162,17 @@ const RideRequestScreen: React.FC = () => {
             value={fare}
             onIncrease={() => setFare((f) => f + 1)}
             onDecrease={() => setFare((f) => Math.max(0, f - 1))}
-            onOpenCustom={() => console.log("open custom fare")}
+            onOpenCustom={() => {}}
           />
         </View>
 
         <TouchableOpacity
           style={styles.cancelBtn}
           onPress={() =>
-              navigation.replace("ChooseRide", {
-                destination: destination ?? "",
-              })}
+            navigation.replace("ChooseRide", {
+              destination: destination ?? "",
+            })
+          }
         >
           <AccessibleText style={styles.cancelText}>
             {t("cancel_ride_btn")}
@@ -211,13 +201,6 @@ const styles = StyleSheet.create({
     left: 15,
     right: 15,
     zIndex: 30,
-  },
-
-  backButtonWrapper: {
-    position: "absolute",
-    top: 270,
-    left: 20,
-    zIndex: 35,
   },
 
   bottomCard: {
@@ -260,19 +243,6 @@ const styles = StyleSheet.create({
   counterRow: {
     alignItems: "center",
     marginBottom: 16,
-  },
-
-  keepLookingBtn: {
-    backgroundColor: "#F5F5F5",
-    paddingVertical: 12,
-    borderRadius: 16,
-    marginBottom: 10,
-  },
-
-  keepLookingText: {
-    textAlign: "center",
-    color: "#333",
-    fontWeight: "700",
   },
 
   cancelBtn: {

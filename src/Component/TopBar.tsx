@@ -47,13 +47,13 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "space-evenly",
     // backgroundColor: "rgba(37, 40, 43, 1)", // REMOVED
-    borderRadius: 10,
+    borderRadius: 99,
     padding: 7,
   },
   menuLine: {
     width: "100%",
-    height: 5,
+    height: 3,
     // backgroundColor: "#3dff73", // REMOVED
-    borderRadius: 4,
+    borderRadius: 999,
   },
 });

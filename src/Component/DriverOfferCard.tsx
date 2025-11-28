@@ -1,15 +1,14 @@
-// src/Component/DriverOfferCard.tsx
 import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next"; // 1. Import this
-import { useAccessibility } from "../context/AccessibilityContext"; // 1. Import
+import { useTranslation } from "react-i18next";
 
 export interface DriverOffer {
   id: string;
   name: string;
-  eta: string;   // e.g. "5 mins away"
+  eta: string;
   rating: number;
+  price: number;
   avatarUrl?: string;
 }
 
@@ -20,12 +19,15 @@ interface Props {
 }
 
 const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
-  const { t } = useTranslation(); // 2. Get the translate function
-  const { colors } = useAccessibility(); // 2. Get Colors
+  const { t } = useTranslation();
+
   return (
-     <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-      {/* Avatar */}
-      <View style={styles.avatarWrapper}>
+    <View style={styles.card}>
+
+      {/* Top row: Avatar + Name + Rating + Price/ETA */}
+      <View style={styles.topRow}>
+
+        {/* Avatar */}
         {offer.avatarUrl ? (
           <Image source={{ uri: offer.avatarUrl }} style={styles.avatar} />
         ) : (
@@ -35,34 +37,41 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
             </AccessibleText>
           </View>
         )}
-      </View>
 
-      {/* AccessibleText */}
-      <View style={styles.textCol}>
-        <AccessibleText style={styles.eta}>{offer.eta}</AccessibleText>
-        <AccessibleText style={styles.name}>{offer.name}</AccessibleText>
-        <View style={styles.ratingRow}>
-          <AccessibleText style={styles.star}>★</AccessibleText>
-          <AccessibleText style={styles.rating}>{offer.rating.toFixed(2)}</AccessibleText>
+        {/* Name + Rating */}
+        <View style={styles.nameColumn}>
+          <View style={styles.nameRow}>
+            <AccessibleText style={styles.nameText}>{offer.name}</AccessibleText>
+
+            {/* Rating pill */}
+            <View style={styles.ratingPill}>
+              <AccessibleText style={styles.ratingStar}>★</AccessibleText>
+              <AccessibleText style={styles.ratingValue}>
+                {offer.rating.toFixed(1)}
+              </AccessibleText>
+            </View>
+          </View>
         </View>
+
+        {/* Price + ETA block (aligned right) */}
+        <View style={styles.priceColumn}>
+          <AccessibleText style={styles.priceText}>PKR {offer.price}</AccessibleText>
+          <AccessibleText style={styles.etaText}>{offer.eta}</AccessibleText>
+        </View>
+
       </View>
 
-      {/* Buttons */}
-      <View style={styles.btnCol}>
-        <TouchableOpacity
-                  // 3. Update Accept Button to use Primary Color
-                  style={[styles.acceptBtn, { backgroundColor: colors.primary }]}
-                  onPress={onAccept}
-                >
-          <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
-        </TouchableOpacity>
-        <TouchableOpacity
-                  style={[styles.rejectBtn, { backgroundColor: colors.surface }]} // Optional: Theme the reject button too
-                  onPress={onReject}
-                >
+      {/* Buttons Row */}
+      <View style={styles.buttonRow}>
+        <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
           <AccessibleText style={styles.rejectText}>{t("reject_btn")}</AccessibleText>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
+          <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
+        </TouchableOpacity>
       </View>
+
     </View>
   );
 };
@@ -71,28 +80,27 @@ export default DriverOfferCard;
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#25282B",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 18,
-    marginBottom: 8,
-    opacity: 0.97,
+    backgroundColor: "rgba(28, 31, 37, 0.92)",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    width: "100%",
   },
 
-  avatarWrapper: {
-    marginRight: 10,
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    marginRight: 12,
   },
 
   avatarPlaceholder: {
-    backgroundColor: "#444",
+    backgroundColor: "#333",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -100,71 +108,94 @@ const styles = StyleSheet.create({
   avatarInitial: {
     color: "white",
     fontWeight: "700",
-    fontSize: 18,
+    fontSize: 20,
   },
 
-  textCol: {
+  nameColumn: {
     flex: 1,
+    justifyContent: "center",
   },
 
-  eta: {
-    color: "white",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-
-  name: {
-    color: "white",
-    fontSize: 13,
-  },
-
-  ratingRow: {
+  nameRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 2,
   },
 
-  star: {
-    color: "#FFC107",
-    marginRight: 4,
-    fontSize: 12,
-  },
-
-  rating: {
-    color: "white",
-    fontSize: 12,
-  },
-
-  btnCol: {
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    height: 46,
-  },
-
-  acceptBtn: {
-    backgroundColor: "#3dff73",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-
-  acceptText: {
-    color: "#1A1A1A",
-    fontSize: 12,
+  nameText: {
+    fontSize: 16,
     fontWeight: "700",
+    color: "white",
+    marginRight: 8,
+  },
+
+  ratingPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#133A20",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+
+  ratingStar: {
+    color: "#00E676",
+    fontSize: 12,
+    marginRight: 2,
+  },
+
+  ratingValue: {
+    color: "#00E676",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  priceColumn: {
+    alignItems: "flex-end",
+    justifyContent: "center",
+    minWidth: 90,
+  },
+
+  priceText: {
+    color: "#00E676",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+
+  etaText: {
+    color: "#B5B5B5",
+    marginTop: 4,
+    fontSize: 12,
+  },
+
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 14,
   },
 
   rejectBtn: {
-    backgroundColor: "#3A3D41",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    backgroundColor: "#32363A",
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     borderRadius: 12,
   },
 
   rejectText: {
     color: "white",
-    fontSize: 12,
     fontWeight: "600",
+    fontSize: 14,
+  },
+
+  acceptBtn: {
+    backgroundColor: "#00E676",
+    paddingVertical: 10,
+    paddingHorizontal: 26,
+    borderRadius: 12,
+  },
+
+  acceptText: {
+    color: "#0A0A0A",
+    fontWeight: "800",
+    fontSize: 14,
   },
 });

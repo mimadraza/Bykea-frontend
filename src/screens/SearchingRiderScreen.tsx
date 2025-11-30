@@ -1,200 +1,370 @@
-import React, { useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
-import { WebView } from "react-native-webview";
+import React, { useRef, useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  Animated,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 
 import AccessibleText from "../Component/AccessibleText";
-import SectionTitle from "../Component/SectionTitle";
 import { useAccessibility } from "../context/AccessibilityContext";
+import { useTranslation } from "react-i18next";
 
-import html_script from "./html_script";
+import LeafletMap, {
+  LeafletMapHandle,
+  LatLng,
+} from "../Component/LeafletMap";
 
-// Dummy assets — replace with yours
-import RiderPic from "../assets/user.png";
-import BoxIcon from "../assets/box.png";
+import { geocodeAddress, getRoute } from "../services/openRouteService";
+import DriverOfferCard, { DriverOffer } from "../Component/DriverOfferCard";
 
-const SearchingRiderScreen = ({ navigation }) => {
-  const mapRef = useRef(null);
-  const { colors, borderWidth } = useAccessibility();
+const SearchingRiderScreen = ({ navigation, route }) => {
+  const { colors, highContrast, borderWidth, isUrdu } = useAccessibility();
+  const { t } = useTranslation();
+  const mapRef = useRef<LeafletMapHandle>(null);
 
-  const [count, setCount] = useState(124);
+  const {
+    pickup,
+    dropoff,
+    start: routeStart,
+    end: routeEnd,
+    geometry: initialGeometry,
+    itemDescription,
+    weight,
+    estimatedValue,
+  } = route.params || {};
+
+  // ---------------- DRIVER OFFERS ----------------
+  const initialOffers: DriverOffer[] = [
+    { id: "1", name: "Asif Gul", eta: t("driver_offer_eta_format", { eta: 5 }), rating: 4.95, price: 90 },
+    { id: "2", name: "Fahad Khan", eta: t("driver_offer_eta_format", { eta: 3 }), rating: 4.88, price: 90 },
+    { id: "3", name: "Umair Ali", eta: t("driver_offer_eta_format", { eta: 7 }), rating: 4.99, price: 90 },
+  ];
+
+  const incomingFeed: DriverOffer[] = [
+    { id: "4", name: "Rehan Ahmed", eta: t("driver_offer_eta_format", { eta: 4 }), rating: 4.82, price: 90 },
+    { id: "5", name: "Talha Javed", eta: t("driver_offer_eta_format", { eta: 6 }), rating: 4.90, price: 90 },
+    { id: "6", name: "Moiz Khan", eta: t("driver_offer_eta_format", { eta: 8 }), rating: 4.78, price: 90 },
+  ];
+
+  const [offers, setOffers] = useState<DriverOffer[]>(initialOffers);
+  const [incoming, setIncoming] = useState<DriverOffer[]>(incomingFeed);
+  const [current, setCurrent] = useState<DriverOffer | null>(initialOffers[0]);
+
+  const [startCoords, setStartCoords] = useState<LatLng | null>(routeStart);
+  const [endCoords, setEndCoords] = useState<LatLng | null>(routeEnd);
+  const [routeGeometry, setRouteGeometry] = useState<any[]>(initialGeometry || []);
+
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const fadeSwap = (cb: () => void) => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true })
+      .start(() => {
+        cb();
+        Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+      });
+  };
+
+  const rejectRide = () => {
+    fadeSwap(() => {
+      if (offers.length <= 1) {
+        setOffers([]);
+        setCurrent(null);
+        return;
+      }
+      const newList = offers.slice(1);
+      setOffers(newList);
+      setCurrent(newList[0]);
+    });
+  };
+
+  useEffect(() => {
+    if (!current) return;
+    const timer = setInterval(rejectRide, 8000);
+    return () => clearInterval(timer);
+  }, [current, offers]);
+
+  useEffect(() => {
+    if (incoming.length === 0) return;
+    const timer = setInterval(() => {
+      const next = incoming[0];
+      setIncoming(prev => prev.slice(1));
+      setOffers(prev => [...prev, next]);
+      if (!current) setCurrent(next);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [incoming, current]);
+
+  // ---------------- ROUTE DRAWING ----------------
+  useEffect(() => {
+    async function loadRoute() {
+      let s = startCoords;
+      let e = endCoords;
+
+      if (!s && pickup) s = await geocodeAddress(pickup);
+      if (!e && dropoff) e = await geocodeAddress(dropoff);
+      if (!s || !e) return;
+
+      let geom = routeGeometry;
+      if (!geom.length) {
+        const route = await getRoute(s, e);
+        geom = route.geometry;
+      }
+
+      setStartCoords(s);
+      setEndCoords(e);
+      setRouteGeometry(geom);
+
+      mapRef.current?.setRoute({ start: s, end: e, geometry: geom });
+    }
+
+    loadRoute();
+  }, []);
 
   return (
-    <View style={styles.container}>
-      {/* MAP BACKGROUND */}
-      <WebView
-        ref={mapRef}
-        source={{ html: html_script }}
-        style={styles.map}
-        javaScriptEnabled
-        domStorageEnabled
-        originWhitelist={["*"]}
-        mixedContentMode="always"
-      />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <LeafletMap ref={mapRef} style={styles.map} />
 
-      {/* RIDER CARD */}
-      <View style={[
-                      styles.riderCard,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                        borderWidth: borderWidth
-                      }
-                    ]}>
-        <Image source={RiderPic} style={styles.riderPic} />
+      {/* TOP LABEL */}
+      <View style={styles.header}>
+        <AccessibleText
+          style={[
+            styles.headerText,
+            { color: colors.text, backgroundColor: highContrast ? colors.surface : "rgba(0,0,0,0.45)" },
+          ]}
+        >
+          {t("finding_rider")}
+        </AccessibleText>
+      </View>
 
-        <View style={{ flex: 1 }}>
-          <AccessibleText style={styles.riderTime}>5 mins away</AccessibleText>
-          <AccessibleText style={[styles.riderName, { color: colors.textSecondary }]}>Asif Gul</AccessibleText>
+      {/* OFFER CARD AREA */}
+      {current && (
+        <Animated.View style={[styles.cardWrap, { opacity: fadeAnim }]}>
+          <DriverOfferCard
+            offer={current}
+            onAccept={() => {
+              if (!startCoords || !endCoords || !routeGeometry.length) return;
 
+              navigation.navigate("RideInProgress", {
+                driver: current,
+                from: "ParcelDetails",
+                start: startCoords,
+                end: endCoords,
+                geometry: routeGeometry,
+                pickup,
+                dropoff,
+                itemDescription,
+                weight,
+                estimatedValue,
+              });
+            }}
+            onReject={rejectRide}
+          />
+        </Animated.View>
+      )}
 
-          <View style={styles.ratingRow}>
-            <AccessibleText style={styles.star}>⭐</AccessibleText>
-            <AccessibleText style={styles.rating}>4.95</AccessibleText>
-          </View>
-        </View>
+      {/* BOTTOM SHEET */}
+      <View
+        style={[
+          styles.sheet,
+          {
+            backgroundColor: colors.sheetBackground,
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
+            borderTopWidth: highContrast ? borderWidth : 0,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <ScrollView contentContainerStyle={styles.sheetContent}>
 
-        {/* Accept */}
-        <TouchableOpacity style={[styles.acceptButton, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate("RideInProgress")}>
-          <AccessibleText style={[styles.acceptText, { color: "#1A1A1A" }]}>Accept</AccessibleText>
-                  </TouchableOpacity>
-
-        {/* Reject */}
-                <TouchableOpacity
-                  style={[
-                    styles.rejectButton,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      borderWidth: borderWidth
-                    }
-                  ]}
-                >
-                  <AccessibleText style={styles.rejectText}>Reject</AccessibleText>
-                </TouchableOpacity>
-              </View>
-
-      {/* VIEWED COUNTER */}
-            <View style={styles.viewedRow}>
-              <AccessibleText style={[styles.viewedText, { color: colors.text }]}>
-                5 riders have viewed your request
-              </AccessibleText>
-
-              <View style={styles.dotsRow}>
-                <View style={[styles.dotActive, { backgroundColor: colors.text }]} />
-                <View style={[styles.dot, { backgroundColor: colors.textSecondary }]} />
-                <View style={[styles.dot, { backgroundColor: colors.textSecondary }]} />
+          {/* PICKUP + DROPOFF BOX */}
+          <View
+            style={[
+              styles.locationBox,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth: highContrast ? borderWidth : 0,
+              },
+            ]}
+          >
+            {/* PICKUP */}
+            <View style={[styles.locationRow, { flexDirection: isUrdu ? "row-reverse" : "row" }]}>
+              <AccessibleText style={[styles.locationIcon, { color: colors.text }]}>🟢</AccessibleText>
+              <View style={{ alignItems: isUrdu ? "flex-end" : "flex-start" }}>
+                <AccessibleText style={[styles.locationLabel, { color: colors.textSecondary }]}>
+                  {t("pickup_location_label")}
+                </AccessibleText>
+                <AccessibleText style={[styles.locationValue, { color: colors.text }]}>
+                  {pickup}
+                </AccessibleText>
               </View>
             </View>
 
-      {/* BOTTOM SHEET */}
-           <View style={[styles.sheet, { backgroundColor: colors.sheetBackground }]}>
-             <ScrollView contentContainerStyle={styles.sheetWrap}>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-               {/* Box Icon */}
-               <View style={[styles.boxCircle, { borderColor: colors.primary }]}>
-                 <Image source={BoxIcon} style={[styles.boxIcon, { tintColor: colors.text }]} />
-               </View>
+            {/* DROPOFF */}
+            <View style={[styles.locationRow, { flexDirection: isUrdu ? "row-reverse" : "row" }]}>
+              <AccessibleText style={[styles.locationIcon, { color: colors.text }]}>📍</AccessibleText>
+              <View style={{ alignItems: isUrdu ? "flex-end" : "flex-start" }}>
+                <AccessibleText style={[styles.locationLabel, { color: colors.textSecondary }]}>
+                  {t("dropoff_location_label")}
+                </AccessibleText>
+                <AccessibleText style={[styles.locationValue, { color: colors.text }]}>
+                  {dropoff}
+                </AccessibleText>
+              </View>
+            </View>
+          </View>
 
-               {/* COUNTER */}
-               <View style={styles.counterRow}>
-                 <TouchableOpacity
-                   style={[styles.counterButton, { backgroundColor: colors.surface }]}
-                   onPress={() => setCount(prev => Math.max(1, prev - 1))}
-                 >
-                   <AccessibleText style={styles.counterBtnText}>-</AccessibleText>
-                 </TouchableOpacity>
+          {/* KEEP LOOKING */}
+          <TouchableOpacity
+            style={[
+              styles.keepBtn,
+              {
+                backgroundColor: highContrast ? colors.surface : "#2C2F34",
+                borderColor: colors.border,
+                borderWidth: highContrast ? borderWidth : 0,
+              },
+            ]}
+          >
+            <AccessibleText style={[styles.keepText, { color: colors.text }]}>
+              {t("keep_looking_btn")}
+            </AccessibleText>
+          </TouchableOpacity>
 
-                 <AccessibleText style={styles.counterValue}>{count}</AccessibleText>
+          {/* CANCEL */}
+          <TouchableOpacity
+            style={[
+              styles.cancelBtn,
+              {
+                borderColor: colors.border,
+                borderWidth: highContrast ? borderWidth : 0,
+              },
+            ]}
+            onPress={() =>
+              navigation.replace("ParcelDetails", {
+                pickup,
+                dropoff,
+                itemDescription,
+                weight,
+                estimatedValue,
+              })
+            }
+          >
+            <AccessibleText style={[styles.cancelText, { color: colors.text }]}>
+              {t("cancel_delivery_btn")}
+            </AccessibleText>
+          </TouchableOpacity>
 
-                 <TouchableOpacity
-                   style={[styles.counterButton, { backgroundColor: colors.surface }]}
-                   onPress={() => setCount(prev => prev + 1)}
-                 >
-                   <AccessibleText style={styles.counterBtnText}>+</AccessibleText>
-                 </TouchableOpacity>
-               </View>
+        </ScrollView>
+      </View>
+    </View>
+  );
+};
 
-               {/* KEEP LOOKING */}
-               <TouchableOpacity style={[styles.keepLookingBtn, { backgroundColor: colors.surface }]}>
-                 <AccessibleText style={styles.keepLookingText}>KEEP LOOKING</AccessibleText>
-               </TouchableOpacity>
+export default SearchingRiderScreen;
 
-               {/* CANCEL RIDE */}
-               <TouchableOpacity
-                 style={styles.cancelButton}
-                 onPress={() => navigation.goBack()}
-               >
-                 <AccessibleText style={styles.cancelText}>CANCEL RIDE</AccessibleText>
-               </TouchableOpacity>
+/* -------------------- STYLES -------------------- */
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { position: "absolute", width: "100%", height: "100%" },
 
-             </ScrollView>
-           </View>
-         </View>
-       );
-     };
+  header: {
+    position: "absolute",
+    top: 55,
+    width: "100%",
+    alignItems: "center",
+    zIndex: 20,
+  },
 
-     export default SearchingRiderScreen;
+  headerText: {
+    fontSize: 20,
+    fontWeight: "700",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
 
-     const styles = StyleSheet.create({
-       container: { flex: 1 },
-       map: {
-         position: "absolute", width: "100%", height: "100%", zIndex: 1,
-       },
-       riderCard: {
-         position: "absolute", top: 60, left: 20, right: 20,
-         borderRadius: 20, padding: 12, flexDirection: "row", alignItems: "center", zIndex: 5,
-       },
-       riderPic: {
-         width: 55, height: 55, borderRadius: 50, marginRight: 12,
-       },
-       riderTime: { fontSize: 18, fontWeight: "bold" },
-       riderName: { fontSize: 14, marginBottom: 4 },
-       ratingRow: { flexDirection: "row", alignItems: "center" },
-       star: { fontSize: 16, marginRight: 4 },
-       rating: { fontSize: 14 },
-       acceptButton: {
-         paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, marginLeft: 8,
-       },
-       acceptText: { fontWeight: "bold" },
-       rejectButton: {
-         paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, marginLeft: 8,
-       },
-       rejectText: { fontWeight: "bold" },
-       viewedRow: {
-         position: "absolute", top: 150, left: 20, right: 20,
-         flexDirection: "row", justifyContent: "space-between", alignItems: "center", zIndex: 5,
-       },
-       viewedText: { fontSize: 13 },
-       dotsRow: { flexDirection: "row" },
-       dotActive: {
-         width: 10, height: 10, borderRadius: 6, marginHorizontal: 4,
-       },
-       dot: {
-         width: 10, height: 10, borderRadius: 6, marginHorizontal: 4,
-       },
-       sheet: {
-         position: "absolute", bottom: 0, width: "100%", height: "43%",
-         borderTopLeftRadius: 30, borderTopRightRadius: 30, zIndex: 10,
-       },
-       sheetWrap: { padding: 20, alignItems: "center" },
-       boxCircle: {
-         width: 120, height: 120, borderWidth: 3, borderRadius: 100,
-         justifyContent: "center", alignItems: "center", marginBottom: 20,
-       },
-       boxIcon: { width: 65, height: 65 },
-       counterRow: {
-         flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 30,
-       },
-       counterButton: { padding: 16, borderRadius: 40 },
-       counterBtnText: { fontSize: 30, fontWeight: "bold" },
-       counterValue: { fontSize: 40, fontWeight: "bold", marginHorizontal: 20 },
-       keepLookingBtn: {
-         width: "100%", paddingVertical: 16, borderRadius: 14, alignItems: "center", marginBottom: 15,
-       },
-       keepLookingText: { fontSize: 16, fontWeight: "bold" },
-       cancelButton: {
-         backgroundColor: "#c62828", width: "100%", paddingVertical: 16, borderRadius: 14, alignItems: "center",
-       },
-       cancelText: { fontSize: 16, color: "white", fontWeight: "bold" },
-     });
+  cardWrap: {
+    position: "absolute",
+    top: 110,
+    left: 20,
+    right: 20,
+    zIndex: 25,
+  },
+
+  sheet: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: "55%",
+    paddingTop: 20,
+  },
+
+  sheetContent: {
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+
+  locationBox: {
+    width: "100%",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 18,
+  },
+
+  locationRow: {
+    marginBottom: 10,
+    alignItems: "center",
+  },
+
+  locationIcon: {
+    fontSize: 26,
+    marginRight: 12,
+    marginLeft: 12,
+  },
+
+  locationLabel: {
+    fontSize: 12,
+    marginBottom: 2,
+  },
+
+  locationValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    flexWrap: "wrap",
+    maxWidth: "85%",
+  },
+
+  divider: {
+    height: 1,
+    marginVertical: 10,
+  },
+
+  keepBtn: {
+    paddingVertical: 14,
+    width: "100%",
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 14,
+  },
+
+  keepText: {
+    fontWeight: "700",
+  },
+
+  cancelBtn: {
+    backgroundColor: "#c62828",
+    paddingVertical: 14,
+    width: "100%",
+    borderRadius: 12,
+    alignItems: "center",
+  },
+
+  cancelText: {
+    fontWeight: "700",
+  },
+});

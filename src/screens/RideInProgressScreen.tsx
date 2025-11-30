@@ -1,12 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, TextInput } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  TextInput,
+} from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "./html_script";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 
 import TopBar from "../Component/TopBar";
 import AccessibleText from "../Component/AccessibleText";
 
-import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
@@ -18,19 +24,37 @@ type NavProp = NativeStackNavigationProp<RootStackParamList>;
 const RideInProgressScreen: React.FC = () => {
   const mapRef = useRef<WebView>(null);
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation();
-  const { colors } = useAccessibility();
-
   const route = useRoute();
-  const { destination } = route.params || {};
 
-  const { driver, from, start, end, geometry } = route.params as {
-    driver: { name: string; rating: number };
-    from?: string;
-    start: { lat: number; lng: number };
-    end: { lat: number; lng: number };
-    geometry: { lat: number; lng: number }[];
-  };
+  const { t } = useTranslation();
+  const { colors, borderWidth, highContrast } = useAccessibility();
+
+ const {
+   driver,
+   from,
+   start,
+   end,
+   geometry,
+   pickup,
+   dropoff,
+   itemDescription,
+   weight,
+   estimatedValue,
+   destination, // ✅ <-- ADDED HERE
+ } = (route.params || {}) as {
+   driver: { name: string; rating: number };
+   from?: string;
+   start?: { lat: number; lng: number };
+   end?: { lat: number; lng: number };
+   geometry?: { lat: number; lng: number }[];
+   pickup?: string;
+   dropoff?: string;
+   itemDescription?: string;
+   weight?: string;
+   estimatedValue?: string;
+   destination?: string; // ✅ <-- ADDED HERE
+ };
+
 
   const [rideFinished, setRideFinished] = useState(false);
   const [rating, setRating] = useState(0);
@@ -49,31 +73,57 @@ const RideInProgressScreen: React.FC = () => {
     );
 
     setTimeout(() => {
-      mapRef.current?.postMessage(
-        JSON.stringify({
-          type: "animateRoute",
-        })
-      );
+      mapRef.current?.postMessage(JSON.stringify({ type: "animateRoute" }));
     }, 600);
   };
 
   const handleCancel = () => {
-    if (from) {
-      navigation.replace("ChooseRide", { destination: "" });
+    // Delivery flow
+    if (from === "ParcelDetails") {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: "Home" },
+            {
+              name: "ParcelDetails",
+              params: {
+                pickup: pickup || "",
+                dropoff: dropoff || "",
+                itemDescription: itemDescription || "",
+                weight: weight || "",
+                estimatedValue: estimatedValue || "",
+              },
+            },
+          ],
+        })
+      );
       return;
     }
 
-    navigation.navigate("ChooseRide", { destination: "" });
+    // Ride flow
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: "Home" },
+          {
+            name: "ChooseRide",
+            params: {
+              destination: destination,
+            },
+          },
+        ],
+      })
+    )
   };
 
   const submitFeedback = () => {
-    console.log("Rating:", rating);
-    console.log("Feedback:", feedback);
     navigation.navigate("Home", { destination: "" });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <WebView
         ref={mapRef}
         source={{ html: html_script }}
@@ -85,26 +135,40 @@ const RideInProgressScreen: React.FC = () => {
         onLoadEnd={sendRouteToMap}
         onMessage={(event) => {
           const data = JSON.parse(event.nativeEvent.data);
-          if (data.type === "rideFinished") {
-            setRideFinished(true);
-          }
+          if (data.type === "rideFinished") setRideFinished(true);
         }}
       />
 
       <TopBar onMenuPress={() => console.log("Menu")} />
 
-      <View style={styles.bottomCard}>
+      {/* Bottom Card */}
+      <View
+        style={[
+          styles.bottomCard,
+          {
+            backgroundColor: colors.sheetBackground,
+            borderColor: colors.border,
+            borderTopWidth: highContrast ? borderWidth : 0,
+          },
+        ]}
+      >
         {rideFinished ? (
           <>
-            <AccessibleText style={styles.finishedTitle}>Ride Finished</AccessibleText>
+            {/* Ride Finished */}
+            <AccessibleText
+              style={[styles.finishedTitle, { color: colors.text }]}
+            >
+              {t("status_completed", "Ride Finished")}
+            </AccessibleText>
 
+            {/* Rating Stars */}
             <View style={styles.ratingRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity key={star} onPress={() => setRating(star)}>
                   <AccessibleText
                     style={{
                       fontSize: 32,
-                      color: rating >= star ? "#FFD700" : "#555",
+                      color: rating >= star ? "#FFD700" : colors.textSecondary,
                       marginHorizontal: 4,
                     }}
                   >
@@ -114,35 +178,94 @@ const RideInProgressScreen: React.FC = () => {
               ))}
             </View>
 
+            {/* Feedback Box */}
             <TextInput
               value={feedback}
               onChangeText={setFeedback}
-              placeholder="Leave your feedback..."
-              placeholderTextColor="#888"
+              placeholder={t("enter_feedback", "Leave your feedback...")}
+              placeholderTextColor={colors.textSecondary}
               multiline
-              style={styles.feedbackBox}
+              style={[
+                styles.feedbackBox,
+                {
+                  backgroundColor: colors.inputBackground,
+                  color: colors.text,
+                  borderColor: colors.border,
+                  borderWidth: highContrast ? borderWidth : 0,
+                },
+              ]}
             />
 
-            <TouchableOpacity style={styles.submitBtn} onPress={submitFeedback}>
-              <AccessibleText style={styles.submitText}>Submit</AccessibleText>
+            {/* Submit */}
+            <TouchableOpacity
+              style={[
+                styles.submitBtn,
+                { backgroundColor: colors.primary },
+              ]}
+              onPress={submitFeedback}
+            >
+              <AccessibleText
+                style={[styles.submitText, { color: colors.text }]}
+              >
+                {t("submit_btn", "Submit")}
+              </AccessibleText>
             </TouchableOpacity>
           </>
         ) : (
           <>
-            <View style={styles.driverRow}>
-              <Image source={require("../assets/user.png")} style={styles.driverImg} />
+            {/* DRIVER CARD */}
+            <View
+              style={[
+                styles.driverRow,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                  borderWidth: highContrast ? borderWidth : 0,
+                },
+              ]}
+            >
+              <Image
+                source={require("../assets/user.png")}
+                style={styles.driverImg}
+              />
 
               <View style={{ flex: 1 }}>
-                <AccessibleText style={styles.statusText}>{t("status_on_way")}</AccessibleText>
+                <AccessibleText
+                  style={[styles.statusText, { color: colors.text }]}
+                >
+                  {t("status_on_way")}
+                </AccessibleText>
+
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <AccessibleText style={styles.driverName}>{driver.name}</AccessibleText>
-                  <AccessibleText style={styles.star}>⭐ {driver.rating}</AccessibleText>
+                  <AccessibleText
+                    style={[styles.driverName, { color: colors.text }]}
+                  >
+                    {driver?.name}
+                  </AccessibleText>
+                  <AccessibleText style={[styles.star, { color: "#FFD700" }]}>
+                    ⭐ {driver?.rating}
+                  </AccessibleText>
                 </View>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
-              <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={[
+                styles.cancelBtn,
+                {
+                  backgroundColor: "#D62828",
+                  borderColor: colors.border,
+                  borderWidth: highContrast ? borderWidth : 0,
+                },
+              ]}
+              onPress={handleCancel}
+            >
+              <AccessibleText
+                style={[styles.cancelText, { color: colors.text }]}
+              >
+                {t("cancel_ride_btn")}
+              </AccessibleText>
             </TouchableOpacity>
           </>
         )}
@@ -153,6 +276,9 @@ const RideInProgressScreen: React.FC = () => {
 
 export default RideInProgressScreen;
 
+/* =====================================
+   STYLES – STRUCTURE ONLY
+===================================== */
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
@@ -169,7 +295,6 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 20,
     paddingTop: 30,
-    backgroundColor: "#25282B",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     zIndex: 50,
@@ -178,7 +303,6 @@ const styles = StyleSheet.create({
   driverRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1F2124",
     padding: 14,
     borderRadius: 18,
     marginBottom: 20,
@@ -192,37 +316,31 @@ const styles = StyleSheet.create({
   },
 
   statusText: {
-    color: "white",
     fontSize: 18,
     fontWeight: "700",
   },
 
   driverName: {
-    color: "#ddd",
     fontSize: 14,
   },
 
   star: {
-    color: "#FFD700",
     fontWeight: "700",
     marginLeft: 6,
   },
 
   cancelBtn: {
-    backgroundColor: "#D62828",
     paddingVertical: 16,
     borderRadius: 12,
   },
 
   cancelText: {
     textAlign: "center",
-    color: "white",
     fontWeight: "800",
     fontSize: 16,
   },
 
   finishedTitle: {
-    color: "white",
     fontSize: 22,
     fontWeight: "800",
     textAlign: "center",
@@ -236,8 +354,6 @@ const styles = StyleSheet.create({
   },
 
   feedbackBox: {
-    backgroundColor: "#1F2124",
-    color: "white",
     borderRadius: 12,
     padding: 12,
     minHeight: 100,
@@ -246,14 +362,12 @@ const styles = StyleSheet.create({
   },
 
   submitBtn: {
-    backgroundColor: "#3DFF73",
     paddingVertical: 16,
     borderRadius: 12,
   },
 
   submitText: {
     textAlign: "center",
-    color: "#000",
     fontWeight: "800",
     fontSize: 16,
   },

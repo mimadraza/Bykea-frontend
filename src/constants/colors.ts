@@ -1,15 +1,15 @@
 // --- STANDARD THEMES ---
 export const LightTheme = {
-  background: "#FFFFFF",
-  surface: "#F5F5F5",
+  background: "#F2F4F6",
+  surface: "#FAFAFA",
   text: "#000000",
-  textSecondary: "#555555",
+  textSecondary: "#111111",
   primary: "#2ECC71",
-  border: "#E0E0E0",
-  icon: "#333333",
+  border: "#A3A8AE",
+  icon: "#000000",
   inputBackground: "#FFFFFF",
-  cardBackground: "#FFFFFF",       // White cards for light mode
-  sheetBackground: "#F5F5F5",      // Light grey bottom sheet
+  cardBackground: "#FAFAFA",
+  sheetBackground: "#E7E9EB",
 };
 
 export const DarkTheme = {

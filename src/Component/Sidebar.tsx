@@ -1,19 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   Animated,
   Image,
+  I18nManager,
 } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
+
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next";
 import { useAccessibility } from "../context/AccessibilityContext";
+import { useTranslation } from "react-i18next";
+
+import { logout, loadUsers, getLoggedInUser } from "../backend/authBackend";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -24,38 +29,56 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation();
   const { colors, borderWidth } = useAccessibility();
+  const { t } = useTranslation();
+  const isRTL = I18nManager.isRTL;
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      const phone = await getLoggedInUser();
+      if (!phone) return;
+
+      const users = await loadUsers();
+      const found = users.find((u: any) => u.phone === phone);
+      setUser(found);
+    })();
+  }, []);
 
   return (
     <>
       {/* OVERLAY */}
       <TouchableOpacity style={styles.overlay} onPress={onClose} />
 
-      {/* SIDEBAR */}
       <Animated.View
         style={[
           styles.sidebar,
           {
             transform: [{ translateX: slideAnim }],
-            backgroundColor: colors.background,
+            backgroundColor: colors.surface,
             borderRightWidth: borderWidth,
             borderColor: colors.border,
           },
         ]}
       >
-        {/* HEADER SECTION */}
-        <View style={styles.header}>
+        {/* HEADER */}
+        <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
           <Image
             source={{
               uri:
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuAkSP1DOTH48-GTn-1xJWqoW4axymhlNvTaGYWFySWrPCKVp0HLFu-xZT5JEUD-ap107K9KvJzdz-LBmO96TiC3sS9prKScSaENDKwfVd3-_q34_aM86YxJnyBk1QjwvFUF19hEw_MCM4A-7Ofcs682JpkjdqbCLXb6ipP3pG1KhbyrjceJgdjI_8P_WGngMzgmtF-88CV6K8_4EMKTy_WE97OWhKfE5Fk_ZKeyAegnQjfHZbJn1L5SwQ9kd_e0p5gJL_cukCIoGkWr",
             }}
-            style={styles.avatar}
+            style={[
+              styles.avatar,
+              { backgroundColor: colors.cardBackground },
+            ]}
+            resizeMode="cover"
           />
-
           <View>
-            <AccessibleText style={styles.name}>Saad Imam</AccessibleText>
+            <AccessibleText style={[styles.name, { color: colors.text }]}>
+              {user?.name || t("sidebar_user")}
+            </AccessibleText>
 
             <TouchableOpacity
               onPress={() => {
@@ -63,69 +86,169 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
                 navigation.navigate("Profile");
               }}
             >
-              <AccessibleText style={styles.viewProfile}>
-                View Profile
+              <AccessibleText style={[styles.viewProfile, { color: colors.primary }]}>
+                {t("sidebar_view_profile")}
               </AccessibleText>
             </TouchableOpacity>
           </View>
-
         </View>
 
-        {/* MENU LIST */}
+        {/* MENU SECTION 1 */}
         <View style={styles.menuSection}>
-          {/* Ride History - ACTIVE */}
+          {/* Ride History */}
           <TouchableOpacity
-            style={[styles.menuItem, styles.activeItem]}
+            style={[
+              styles.menuItem,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
             onPress={() => navigation.navigate("RideHistory")}
           >
-            <AccessibleText style={[styles.menuIcon, styles.activeIcon]}>🚲</AccessibleText>
-            <AccessibleText style={[styles.menuLabel, styles.activeLabel]}>
-              Ride History
+            <AccessibleText style={[styles.menuIcon, { color: colors.primary }]}>
+              🚲
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_ride_history")}
             </AccessibleText>
           </TouchableOpacity>
 
           {/* Delivery History */}
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>📦</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Delivery History</AccessibleText>
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              📦
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_delivery_history")}
+            </AccessibleText>
           </TouchableOpacity>
 
           {/* Payment Methods */}
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>💳</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Payment Methods</AccessibleText>
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              💳
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_payment_methods")}
+            </AccessibleText>
           </TouchableOpacity>
 
           {/* Promotions */}
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>🏷️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Promotions</AccessibleText>
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              🏷️
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_promotions")}
+            </AccessibleText>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.separator} />
+        <View
+          style={[
+            styles.separator,
+            { borderBottomColor: colors.border, borderBottomWidth: borderWidth },
+          ]}
+        />
 
-        {/* SECOND SECTION */}
+        {/* MENU SECTION 2 */}
         <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>❓</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Help & Support</AccessibleText>
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+            onPress={() => navigation.navigate("Helpline")}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              ❓
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_help_support")}
+            </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Accessibility")} >
-            <AccessibleText style={styles.menuIcon}>⚙️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Settings</AccessibleText>
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+            onPress={() => navigation.navigate("Accessibility")}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              ⚙️
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_settings")}
+            </AccessibleText>
           </TouchableOpacity>
         </View>
 
         {/* FOOTER */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>↩️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Logout</AccessibleText>
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.rtlRow]}
+            onPress={async () => {
+              await logout();
+              onClose();
+
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "Auth" }],
+                })
+              );
+            }}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              ↩️
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_logout")}
+            </AccessibleText>
           </TouchableOpacity>
 
-          <AccessibleText style={styles.version}>v3.14.2</AccessibleText>
+          <AccessibleText style={[styles.version, { color: colors.textSecondary }]}>
+            v3.14.2
+          </AccessibleText>
         </View>
       </Animated.View>
     </>
@@ -134,21 +257,25 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
 
 export default Sidebar;
 
-/* ============================
+/* ----------------------------
    STYLES
-============================ */
-
+---------------------------- */
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
-    top: 0, bottom: 0, left: 0, right: 0,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
     zIndex: 40,
   },
 
   sidebar: {
     position: "absolute",
-    top: 0, bottom: 0, left: 0,
+    top: 0,
+    bottom: 0,
+    left: 0,
     width: "75%",
     maxWidth: 300,
     paddingHorizontal: 20,
@@ -157,30 +284,34 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
 
-  /* HEADER */
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 15,
     marginBottom: 30,
   },
+
+  rtlRow: {
+    flexDirection: "row-reverse",
+  },
+
   avatar: {
     width: 64,
     height: 64,
     borderRadius: 999,
+    overflow: "hidden",
   },
+
   name: {
     fontSize: 20,
     fontWeight: "700",
-    color: "white",
   },
+
   viewProfile: {
     fontSize: 14,
-    color: "#0df259",
     marginTop: 2,
   },
 
-  /* MENU LIST */
   menuSection: {
     marginBottom: 20,
   },
@@ -190,37 +321,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 48,
     paddingHorizontal: 10,
-    borderRadius: 5,
+    borderRadius: 6,
     marginBottom: 6,
   },
 
   menuIcon: {
     fontSize: 20,
     width: 28,
-    color: "#ccc",
   },
 
   menuLabel: {
     fontSize: 16,
-    color: "white",
     fontWeight: "500",
   },
 
-  /* ACTIVE ITEM */
-  activeItem: {
-    backgroundColor: "rgba(13, 242, 89, 0.15)",
-  },
-  activeIcon: {
-    color: "#0df259",
-  },
-  activeLabel: {
-    color: "#0df259",
-    fontWeight: "700",
-  },
-
   separator: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: "#333",
     marginVertical: 20,
   },
 
@@ -232,7 +347,6 @@ const styles = StyleSheet.create({
   version: {
     marginTop: 10,
     fontSize: 12,
-    color: "#666",
     alignSelf: "center",
   },
 });

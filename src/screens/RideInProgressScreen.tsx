@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, TextInput } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  TextInput,
+} from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "./html_script";
+import { CommonActions } from "@react-navigation/native";
 
 import TopBar from "../Component/TopBar";
 import AccessibleText from "../Component/AccessibleText";
@@ -22,14 +29,29 @@ const RideInProgressScreen: React.FC = () => {
   const { colors } = useAccessibility();
 
   const route = useRoute();
-  const { destination } = route.params || {};
 
-  const { driver, from, start, end, geometry } = route.params as {
+  const {
+    driver,
+    from,
+    start,
+    end,
+    geometry,
+    pickup,
+    dropoff,
+    itemDescription,
+    weight,
+    estimatedValue,
+  } = (route.params || {}) as {
     driver: { name: string; rating: number };
     from?: string;
-    start: { lat: number; lng: number };
-    end: { lat: number; lng: number };
-    geometry: { lat: number; lng: number }[];
+    start?: { lat: number; lng: number };
+    end?: { lat: number; lng: number };
+    geometry?: { lat: number; lng: number }[];
+    pickup?: string;
+    dropoff?: string;
+    itemDescription?: string;
+    weight?: string;
+    estimatedValue?: string;
   };
 
   const [rideFinished, setRideFinished] = useState(false);
@@ -57,18 +79,55 @@ const RideInProgressScreen: React.FC = () => {
     }, 600);
   };
 
+  /** ------------------------------------------------
+   *  FIXED CANCEL BEHAVIOR
+   *  Delivery flow should:
+   *  RideInProgress → ParcelDetails → Back → Home
+   *
+   *  We RESET the stack.
+   *  ------------------------------------------------ */
   const handleCancel = () => {
-    if (from) {
-      navigation.replace("ChooseRide", { destination: "" });
+    // If this ride came from the parcel/delivery flow
+    if (from === "ParcelDetails") {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: "Home" },
+            {
+              name: "ParcelDetails",
+              params: {
+                pickup: pickup || "",
+                dropoff: dropoff || "",
+                itemDescription: itemDescription || "",
+                weight: weight || "",
+                estimatedValue: estimatedValue || "",
+              },
+            },
+          ],
+        })
+      );
       return;
     }
 
-    navigation.navigate("ChooseRide", { destination: "" });
+    // Ride flow cancellation
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: "Home" },
+          {
+            name: "ChooseRide",
+            params: {
+              destination: "",
+            },
+          },
+        ],
+      })
+    );
   };
 
   const submitFeedback = () => {
-    console.log("Rating:", rating);
-    console.log("Feedback:", feedback);
     navigation.navigate("Home", { destination: "" });
   };
 
@@ -96,11 +155,16 @@ const RideInProgressScreen: React.FC = () => {
       <View style={styles.bottomCard}>
         {rideFinished ? (
           <>
-            <AccessibleText style={styles.finishedTitle}>Ride Finished</AccessibleText>
+            <AccessibleText style={styles.finishedTitle}>
+              Ride Finished
+            </AccessibleText>
 
             <View style={styles.ratingRow}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setRating(star)}
+                >
                   <AccessibleText
                     style={{
                       fontSize: 32,
@@ -123,26 +187,48 @@ const RideInProgressScreen: React.FC = () => {
               style={styles.feedbackBox}
             />
 
-            <TouchableOpacity style={styles.submitBtn} onPress={submitFeedback}>
-              <AccessibleText style={styles.submitText}>Submit</AccessibleText>
+            <TouchableOpacity
+              style={styles.submitBtn}
+              onPress={submitFeedback}
+            >
+              <AccessibleText style={styles.submitText}>
+                Submit
+              </AccessibleText>
             </TouchableOpacity>
           </>
         ) : (
           <>
             <View style={styles.driverRow}>
-              <Image source={require("../assets/user.png")} style={styles.driverImg} />
+              <Image
+                source={require("../assets/user.png")}
+                style={styles.driverImg}
+              />
 
               <View style={{ flex: 1 }}>
-                <AccessibleText style={styles.statusText}>{t("status_on_way")}</AccessibleText>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <AccessibleText style={styles.driverName}>{driver.name}</AccessibleText>
-                  <AccessibleText style={styles.star}>⭐ {driver.rating}</AccessibleText>
+                <AccessibleText style={styles.statusText}>
+                  {t("status_on_way")}
+                </AccessibleText>
+
+                <View
+                  style={{ flexDirection: "row", alignItems: "center" }}
+                >
+                  <AccessibleText style={styles.driverName}>
+                    {driver?.name}
+                  </AccessibleText>
+                  <AccessibleText style={styles.star}>
+                    ⭐ {driver?.rating}
+                  </AccessibleText>
                 </View>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
-              <AccessibleText style={styles.cancelText}>{t("cancel_ride_btn")}</AccessibleText>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleCancel}
+            >
+              <AccessibleText style={styles.cancelText}>
+                {t("cancel_ride_btn")}
+              </AccessibleText>
             </TouchableOpacity>
           </>
         )}

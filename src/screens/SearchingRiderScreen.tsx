@@ -1,200 +1,414 @@
-import React, { useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
-import { WebView } from "react-native-webview";
+import React, { useRef, useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  Animated,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 
 import AccessibleText from "../Component/AccessibleText";
-import SectionTitle from "../Component/SectionTitle";
 import { useAccessibility } from "../context/AccessibilityContext";
 
-import html_script from "./html_script";
+import LeafletMap, {
+  LeafletMapHandle,
+  LatLng,
+} from "../Component/LeafletMap";
 
-// Dummy assets — replace with yours
-import RiderPic from "../assets/user.png";
-import BoxIcon from "../assets/box.png";
+import { geocodeAddress, getRoute } from "../services/openRouteService";
+import DriverOfferCard, { DriverOffer } from "../Component/DriverOfferCard";
 
-const SearchingRiderScreen = ({ navigation }) => {
-  const mapRef = useRef(null);
-  const { colors, borderWidth } = useAccessibility();
+const SearchingRiderScreen = ({ navigation, route }) => {
+  const { colors } = useAccessibility();
+  const mapRef = useRef<LeafletMapHandle>(null);
 
-  const [count, setCount] = useState(124);
+  const {
+    pickup,
+    dropoff,
+    start: routeStart,
+    end: routeEnd,
+    geometry: initialGeometry,
+    itemDescription,
+    weight,
+    estimatedValue,
+  } = route.params || {};
+
+  // ---------------- DRIVER OFFERS ----------------
+  const initialOffers: DriverOffer[] = [
+    {
+      id: "1",
+      name: "Asif Gul",
+      eta: "5 mins away",
+      rating: 4.95,
+      price: 90,
+    },
+    {
+      id: "2",
+      name: "Fahad Khan",
+      eta: "3 mins away",
+      rating: 4.88,
+      price: 90,
+    },
+    {
+      id: "3",
+      name: "Umair Ali",
+      eta: "7 mins away",
+      rating: 4.99,
+      price: 90,
+    },
+  ];
+
+  const incomingFeed: DriverOffer[] = [
+    {
+      id: "4",
+      name: "Rehan Ahmed",
+      eta: "4 mins away",
+      rating: 4.82,
+      price: 90,
+    },
+    {
+      id: "5",
+      name: "Talha Javed",
+      eta: "6 mins away",
+      rating: 4.90,
+      price: 90,
+    },
+    {
+      id: "6",
+      name: "Moiz Khan",
+      eta: "8 mins away",
+      rating: 4.78,
+      price: 90,
+    },
+  ];
+
+  const [offers, setOffers] = useState<DriverOffer[]>(initialOffers);
+  const [incoming, setIncoming] = useState<DriverOffer[]>(incomingFeed);
+  const [current, setCurrent] = useState<DriverOffer | null>(initialOffers[0]);
+
+  // Route state to pass to RideInProgress
+  const [startCoords, setStartCoords] = useState<LatLng | null>(
+    routeStart || null
+  );
+  const [endCoords, setEndCoords] = useState<LatLng | null>(
+    routeEnd || null
+  );
+  const [routeGeometry, setRouteGeometry] = useState<any[]>(
+    initialGeometry || []
+  );
+
+  // Fade animation
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const fadeSwap = (cb: () => void) => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      cb();
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  // Reject current offer
+  const rejectRide = () => {
+    fadeSwap(() => {
+      if (offers.length <= 1) {
+        setOffers([]);
+        setCurrent(null);
+        return;
+      }
+      const newList = offers.slice(1);
+      setOffers(newList);
+      setCurrent(newList[0]);
+    });
+  };
+
+  // Auto-cycle every 8 seconds
+  useEffect(() => {
+    let timer: any = null;
+
+    if (current) {
+      timer = setInterval(() => {
+        rejectRide();
+      }, 8000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [current, offers]);
+
+  // Auto-spawn new riders every 5 seconds
+  useEffect(() => {
+    let spawnTimer: any = null;
+
+    if (incoming.length > 0) {
+      spawnTimer = setInterval(() => {
+        const next = incoming[0];
+        const rest = incoming.slice(1);
+
+        setIncoming(rest);
+        setOffers(prev => [...prev, next]);
+        if (!current) setCurrent(next);
+      }, 5000);
+    }
+
+    return () => {
+      if (spawnTimer) clearInterval(spawnTimer);
+    };
+  }, [incoming, current]);
+
+  // ---------------- ROUTE DRAWING ----------------
+  useEffect(() => {
+    async function loadRoute() {
+      let s = startCoords;
+      let e = endCoords;
+
+      if (!s || !e) {
+        if (pickup) s = await geocodeAddress(pickup);
+        if (dropoff) e = await geocodeAddress(dropoff);
+      }
+
+      if (!s || !e) return;
+
+      let geom = routeGeometry;
+      if (!geom || !geom.length) {
+        const route = await getRoute(s, e);
+        geom = route.geometry;
+        setRouteGeometry(geom);
+      }
+
+      setStartCoords(s);
+      setEndCoords(e);
+
+      mapRef.current?.setRoute({
+        start: s,
+        end: e,
+        geometry: geom,
+      });
+    }
+
+    loadRoute();
+  }, []);
 
   return (
     <View style={styles.container}>
-      {/* MAP BACKGROUND */}
-      <WebView
-        ref={mapRef}
-        source={{ html: html_script }}
-        style={styles.map}
-        javaScriptEnabled
-        domStorageEnabled
-        originWhitelist={["*"]}
-        mixedContentMode="always"
-      />
+      <LeafletMap ref={mapRef} style={styles.map} />
 
-      {/* RIDER CARD */}
-      <View style={[
-                      styles.riderCard,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                        borderWidth: borderWidth
-                      }
-                    ]}>
-        <Image source={RiderPic} style={styles.riderPic} />
+      {/* TOP LABEL */}
+      <View style={styles.header}>
+        <AccessibleText style={styles.headerText}>
+          Finding Rider…
+        </AccessibleText>
+      </View>
 
-        <View style={{ flex: 1 }}>
-          <AccessibleText style={styles.riderTime}>5 mins away</AccessibleText>
-          <AccessibleText style={[styles.riderName, { color: colors.textSecondary }]}>Asif Gul</AccessibleText>
+      {/* OFFER CARD AREA */}
+      {current && (
+        <Animated.View style={[styles.cardWrap, { opacity: fadeAnim }]}>
+          <DriverOfferCard
+            offer={current}
+            onAccept={() => {
+              if (!startCoords || !endCoords || !routeGeometry.length) {
+                return;
+              }
+              navigation.navigate("RideInProgress", {
+                driver: current,
+                from: "ParcelDetails",
+                start: startCoords,
+                end: endCoords,
+                geometry: routeGeometry,
+                pickup,
+                dropoff,
+                itemDescription,
+                weight,
+                estimatedValue,
+              });
+            }}
+            onReject={rejectRide}
+          />
+        </Animated.View>
+      )}
 
-
-          <View style={styles.ratingRow}>
-            <AccessibleText style={styles.star}>⭐</AccessibleText>
-            <AccessibleText style={styles.rating}>4.95</AccessibleText>
-          </View>
-        </View>
-
-        {/* Accept */}
-        <TouchableOpacity style={[styles.acceptButton, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate("RideInProgress")}>
-          <AccessibleText style={[styles.acceptText, { color: "#1A1A1A" }]}>Accept</AccessibleText>
-                  </TouchableOpacity>
-
-        {/* Reject */}
-                <TouchableOpacity
-                  style={[
-                    styles.rejectButton,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      borderWidth: borderWidth
-                    }
-                  ]}
-                >
-                  <AccessibleText style={styles.rejectText}>Reject</AccessibleText>
-                </TouchableOpacity>
-              </View>
-
-      {/* VIEWED COUNTER */}
-            <View style={styles.viewedRow}>
-              <AccessibleText style={[styles.viewedText, { color: colors.text }]}>
-                5 riders have viewed your request
-              </AccessibleText>
-
-              <View style={styles.dotsRow}>
-                <View style={[styles.dotActive, { backgroundColor: colors.text }]} />
-                <View style={[styles.dot, { backgroundColor: colors.textSecondary }]} />
-                <View style={[styles.dot, { backgroundColor: colors.textSecondary }]} />
+      {/* BOTTOM SHEET */}
+      <View style={[styles.sheet, { backgroundColor: colors.sheetBackground }]}>
+        <ScrollView contentContainerStyle={styles.sheetContent}>
+          {/* PICKUP + DROPOFF DETAILS */}
+          <View style={styles.locationBox}>
+            <View style={styles.locationRow}>
+              <AccessibleText style={styles.locationIcon}>🟢</AccessibleText>
+              <View>
+                <AccessibleText style={styles.locationLabel}>
+                  Pickup Location
+                </AccessibleText>
+                <AccessibleText style={styles.locationValue}>
+                  {pickup}
+                </AccessibleText>
               </View>
             </View>
 
-      {/* BOTTOM SHEET */}
-           <View style={[styles.sheet, { backgroundColor: colors.sheetBackground }]}>
-             <ScrollView contentContainerStyle={styles.sheetWrap}>
+            <View style={styles.divider} />
 
-               {/* Box Icon */}
-               <View style={[styles.boxCircle, { borderColor: colors.primary }]}>
-                 <Image source={BoxIcon} style={[styles.boxIcon, { tintColor: colors.text }]} />
-               </View>
+            <View style={styles.locationRow}>
+              <AccessibleText style={styles.locationIcon}>📍</AccessibleText>
+              <View>
+                <AccessibleText style={styles.locationLabel}>
+                  Dropoff Location
+                </AccessibleText>
+                <AccessibleText style={styles.locationValue}>
+                  {dropoff}
+                </AccessibleText>
+              </View>
+            </View>
+          </View>
 
-               {/* COUNTER */}
-               <View style={styles.counterRow}>
-                 <TouchableOpacity
-                   style={[styles.counterButton, { backgroundColor: colors.surface }]}
-                   onPress={() => setCount(prev => Math.max(1, prev - 1))}
-                 >
-                   <AccessibleText style={styles.counterBtnText}>-</AccessibleText>
-                 </TouchableOpacity>
+          <TouchableOpacity style={styles.keepBtn}>
+            <AccessibleText style={styles.keepText}>
+              KEEP LOOKING
+            </AccessibleText>
+          </TouchableOpacity>
 
-                 <AccessibleText style={styles.counterValue}>{count}</AccessibleText>
+          <TouchableOpacity
+            style={styles.cancelBtn}
+            onPress={() =>
+              navigation.replace("ParcelDetails", {
+                pickup,
+                dropoff,
+                itemDescription,
+                weight,
+                estimatedValue,
+              })
+            }
+          >
+            <AccessibleText style={styles.cancelText}>
+              CANCEL DELIVERY
+            </AccessibleText>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </View>
+  );
+};
 
-                 <TouchableOpacity
-                   style={[styles.counterButton, { backgroundColor: colors.surface }]}
-                   onPress={() => setCount(prev => prev + 1)}
-                 >
-                   <AccessibleText style={styles.counterBtnText}>+</AccessibleText>
-                 </TouchableOpacity>
-               </View>
+export default SearchingRiderScreen;
 
-               {/* KEEP LOOKING */}
-               <TouchableOpacity style={[styles.keepLookingBtn, { backgroundColor: colors.surface }]}>
-                 <AccessibleText style={styles.keepLookingText}>KEEP LOOKING</AccessibleText>
-               </TouchableOpacity>
+/* -------------------- STYLES -------------------- */
 
-               {/* CANCEL RIDE */}
-               <TouchableOpacity
-                 style={styles.cancelButton}
-                 onPress={() => navigation.goBack()}
-               >
-                 <AccessibleText style={styles.cancelText}>CANCEL RIDE</AccessibleText>
-               </TouchableOpacity>
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
 
-             </ScrollView>
-           </View>
-         </View>
-       );
-     };
+  header: {
+    position: "absolute",
+    top: 55,
+    width: "100%",
+    alignItems: "center",
+    zIndex: 20,
+  },
 
-     export default SearchingRiderScreen;
+  headerText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "700",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderRadius: 12,
+  },
 
-     const styles = StyleSheet.create({
-       container: { flex: 1 },
-       map: {
-         position: "absolute", width: "100%", height: "100%", zIndex: 1,
-       },
-       riderCard: {
-         position: "absolute", top: 60, left: 20, right: 20,
-         borderRadius: 20, padding: 12, flexDirection: "row", alignItems: "center", zIndex: 5,
-       },
-       riderPic: {
-         width: 55, height: 55, borderRadius: 50, marginRight: 12,
-       },
-       riderTime: { fontSize: 18, fontWeight: "bold" },
-       riderName: { fontSize: 14, marginBottom: 4 },
-       ratingRow: { flexDirection: "row", alignItems: "center" },
-       star: { fontSize: 16, marginRight: 4 },
-       rating: { fontSize: 14 },
-       acceptButton: {
-         paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, marginLeft: 8,
-       },
-       acceptText: { fontWeight: "bold" },
-       rejectButton: {
-         paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, marginLeft: 8,
-       },
-       rejectText: { fontWeight: "bold" },
-       viewedRow: {
-         position: "absolute", top: 150, left: 20, right: 20,
-         flexDirection: "row", justifyContent: "space-between", alignItems: "center", zIndex: 5,
-       },
-       viewedText: { fontSize: 13 },
-       dotsRow: { flexDirection: "row" },
-       dotActive: {
-         width: 10, height: 10, borderRadius: 6, marginHorizontal: 4,
-       },
-       dot: {
-         width: 10, height: 10, borderRadius: 6, marginHorizontal: 4,
-       },
-       sheet: {
-         position: "absolute", bottom: 0, width: "100%", height: "43%",
-         borderTopLeftRadius: 30, borderTopRightRadius: 30, zIndex: 10,
-       },
-       sheetWrap: { padding: 20, alignItems: "center" },
-       boxCircle: {
-         width: 120, height: 120, borderWidth: 3, borderRadius: 100,
-         justifyContent: "center", alignItems: "center", marginBottom: 20,
-       },
-       boxIcon: { width: 65, height: 65 },
-       counterRow: {
-         flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 30,
-       },
-       counterButton: { padding: 16, borderRadius: 40 },
-       counterBtnText: { fontSize: 30, fontWeight: "bold" },
-       counterValue: { fontSize: 40, fontWeight: "bold", marginHorizontal: 20 },
-       keepLookingBtn: {
-         width: "100%", paddingVertical: 16, borderRadius: 14, alignItems: "center", marginBottom: 15,
-       },
-       keepLookingText: { fontSize: 16, fontWeight: "bold" },
-       cancelButton: {
-         backgroundColor: "#c62828", width: "100%", paddingVertical: 16, borderRadius: 14, alignItems: "center",
-       },
-       cancelText: { fontSize: 16, color: "white", fontWeight: "bold" },
-     });
+  cardWrap: {
+    position: "absolute",
+    top: 110,
+    left: 20,
+    right: 20,
+    zIndex: 25,
+  },
+
+  sheet: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: "55%",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingTop: 20,
+  },
+
+  sheetContent: {
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+
+  locationBox: {
+    width: "100%",
+    backgroundColor: "#1C2026",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 18,
+  },
+
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  locationIcon: {
+    fontSize: 26,
+    marginRight: 12,
+  },
+
+  locationLabel: {
+    color: "#A9A9A9",
+    fontSize: 12,
+    marginBottom: 2,
+  },
+
+  locationValue: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "600",
+    flexWrap: "wrap",
+    maxWidth: "85%",
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#333",
+    marginVertical: 10,
+  },
+
+  keepBtn: {
+    paddingVertical: 14,
+    width: "100%",
+    borderRadius: 12,
+    backgroundColor: "#2C2F34",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  keepText: {
+    color: "white",
+    fontWeight: "700",
+  },
+
+  cancelBtn: {
+    backgroundColor: "#c62828",
+    paddingVertical: 14,
+    width: "100%",
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  cancelText: {
+    color: "white",
+    fontWeight: "700",
+  },
+});

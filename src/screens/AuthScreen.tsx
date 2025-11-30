@@ -3,25 +3,36 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 
+import Logo from "../Component/Logo";
 import { useAccessibility } from "../context/AccessibilityContext";
-import Logo from "../Component/Logo"; // your real logo component
+
+import {
+  checkPhoneExists,
+  sendOtp,
+  verifyOtp,
+  registerUser,
+  loginUser,
+} from "../backend/authBackend";
 
 type AuthMode = "phone" | "otp" | "register";
 
 const AuthScreen = ({ navigation }) => {
   const { colors } = useAccessibility();
+
   const [mode, setMode] = useState<AuthMode>("phone");
 
-  // FORM DATA (all in one file)
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+
+  // true = new user → redirect to register
+  const [needsRegister, setNeedsRegister] = useState(false);
 
   const goBack = () => {
     if (mode === "register") return setMode("otp");
@@ -41,6 +52,55 @@ const AuthScreen = ({ navigation }) => {
     register: "Just a few more details to get you started.",
   }[mode];
 
+  /* -----------------------------
+        1. Continue → Check phone
+  ------------------------------ */
+  const handleContinue = async () => {
+    const cleaned = phone.trim();
+    if (!cleaned) return;
+
+    const exists = await checkPhoneExists(cleaned);
+    await sendOtp(cleaned);
+
+    setNeedsRegister(!exists);
+    setMode("otp");
+  };
+
+  /* -----------------------------
+        2. Verify OTP
+  ------------------------------ */
+  const handleVerify = async () => {
+    const code = otp.join("");
+    const valid = await verifyOtp(code);
+
+    if (!valid) {
+      alert("Invalid OTP");
+      return;
+    }
+
+    if (needsRegister) {
+      setMode("register");
+      return;
+    }
+
+    // Login existing user
+    await loginUser(phone.trim());
+    navigation.replace("Accessibility");
+  };
+
+  /* -----------------------------
+        3. Register new user
+  ------------------------------ */
+  const handleRegister = async () => {
+    await registerUser({
+      phone: phone.trim(),
+      name: name.trim(),
+      email: email.trim(),
+    });
+
+    navigation.replace("Accessibility");
+  };
+
   return (
     <ScrollView
       contentContainerStyle={[
@@ -48,30 +108,22 @@ const AuthScreen = ({ navigation }) => {
         { backgroundColor: colors.background },
       ]}
     >
-      {/* Back Button */}
       {mode !== "phone" && (
         <TouchableOpacity onPress={goBack} style={styles.backButton}>
           <Text style={{ color: colors.text, fontSize: 28 }}>‹</Text>
         </TouchableOpacity>
       )}
 
-      {/* Logo */}
       <View style={styles.logoWrapper}>
         <Logo size={32} accessibilityLabel="Bykea Logo" />
       </View>
 
-      {/* Headline */}
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      <Text
-        style={[
-          styles.subTitle,
-          { color: colors.text + "AA" },
-        ]}
-      >
+      <Text style={[styles.subTitle, { color: colors.text + "AA" }]}>
         {subtitle}
       </Text>
 
-      {/* === PHONE MODE === */}
+      {/* PHONE MODE */}
       {mode === "phone" && (
         <View style={{ width: "100%" }}>
           <Text style={[styles.label, { color: colors.text }]}>
@@ -81,67 +133,62 @@ const AuthScreen = ({ navigation }) => {
           <View style={styles.phoneInputWrapper}>
             <Text style={styles.prefix}>+92</Text>
             <TextInput
-              style={[styles.phoneInput, { color: colors.text }]}
               keyboardType="number-pad"
               placeholder="300 1234567"
               placeholderTextColor={colors.textMuted}
+              style={[styles.phoneInput, { color: colors.text }]}
               value={phone}
               onChangeText={setPhone}
             />
           </View>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setMode("otp")}
-          >
+          <TouchableOpacity style={styles.button} onPress={handleContinue}>
             <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* === OTP MODE === */}
+      {/* OTP MODE */}
       {mode === "otp" && (
         <View style={{ width: "100%" }}>
           <View style={styles.otpRow}>
-            {otp.map((digit, index) => (
+            {otp.map((digit, i) => (
               <TextInput
-                key={index}
-                keyboardType="numeric"
+                key={i}
                 maxLength={1}
+                keyboardType="numeric"
                 style={styles.otpBox}
                 value={digit}
-                onChangeText={(value) => {
-                  const newOtp = [...otp];
-                  newOtp[index] = value;
-                  setOtp(newOtp);
+                onChangeText={(v) => {
+                  const arr = [...otp];
+                  arr[i] = v;
+                  setOtp(arr);
                 }}
               />
             ))}
           </View>
 
-          <TouchableOpacity style={{ alignSelf: "center", marginBottom: 20 }}>
+          <TouchableOpacity
+            style={{ alignSelf: "center", marginBottom: 20 }}
+            onPress={() => sendOtp(phone.trim())}
+          >
             <Text style={styles.resendText}>Resend Code</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setMode("register")}
-          >
+          <TouchableOpacity style={styles.button} onPress={handleVerify}>
             <Text style={styles.buttonText}>Verify</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* === REGISTER MODE === */}
+      {/* REGISTER MODE */}
       {mode === "register" && (
         <View style={{ width: "100%" }}>
-          <Text style={[styles.label, { color: colors.text }]}>
-            Full Name
-          </Text>
+          <Text style={[styles.label, { color: colors.text }]}>Full Name</Text>
           <TextInput
-            style={[styles.textField, { color: colors.text }]}
             placeholder="Enter your full name"
             placeholderTextColor={colors.textMuted}
+            style={[styles.textField, { color: colors.text }]}
             value={name}
             onChangeText={setName}
           />
@@ -150,23 +197,19 @@ const AuthScreen = ({ navigation }) => {
             Email Address (Optional)
           </Text>
           <TextInput
-            style={[styles.textField, { color: colors.text }]}
             placeholder="Enter your email address"
             placeholderTextColor={colors.textMuted}
+            style={[styles.textField, { color: colors.text }]}
             value={email}
             onChangeText={setEmail}
           />
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.replace("Accessibility")}
-          >
+          <TouchableOpacity style={styles.button} onPress={handleRegister}>
             <Text style={styles.buttonText}>Register</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Legal Footer */}
       <Text style={[styles.legal, { color: colors.textMuted }]}>
         By continuing, you agree to our{" "}
         <Text style={styles.link}>Terms of Service</Text> &
@@ -178,9 +221,9 @@ const AuthScreen = ({ navigation }) => {
 
 export default AuthScreen;
 
-// =====================================
-// STYLES
-// =====================================
+/* ---------------------------
+   STYLES
+---------------------------- */
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
@@ -188,31 +231,12 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     minHeight: "100%",
   },
-  backButton: {
-    marginBottom: 16,
-  },
-  logoWrapper: {
-    alignSelf: "center",
-    marginBottom: 26,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  subTitle: {
-    fontSize: 15,
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 30,
-  },
+  backButton: { marginBottom: 16 },
+  logoWrapper: { alignSelf: "center", marginBottom: 26 },
+  title: { fontSize: 28, fontWeight: "700", textAlign: "center" },
+  subTitle: { fontSize: 15, textAlign: "center", marginTop: 8, marginBottom: 30 },
+  label: { fontSize: 15, fontWeight: "600", marginBottom: 8 },
 
-  // PHONE INPUT
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
   phoneInputWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -222,17 +246,9 @@ const styles = StyleSheet.create({
     height: 52,
     marginBottom: 20,
   },
-  prefix: {
-    fontSize: 16,
-    marginRight: 8,
-    color: "#9CA3AF",
-  },
-  phoneInput: {
-    flex: 1,
-    fontSize: 16,
-  },
+  prefix: { fontSize: 16, marginRight: 8, color: "#9CA3AF" },
+  phoneInput: { flex: 1, fontSize: 16 },
 
-  // OTP
   otpRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -245,14 +261,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     textAlign: "center",
     fontSize: 22,
-    color: "#fff",
+    color: "white",
   },
-  resendText: {
-    color: "#0df259",
-    fontWeight: "600",
-  },
+  resendText: { color: "#0df259", fontWeight: "600" },
 
-  // REGISTER FIELDS
   textField: {
     backgroundColor: "#1c1f1d",
     borderRadius: 12,
@@ -260,9 +272,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 18,
     fontSize: 16,
+    color: "white",
   },
 
-  // BUTTON
   button: {
     backgroundColor: "#0df259",
     height: 52,
@@ -277,15 +289,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // LEGAL
-  legal: {
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 30,
-    paddingHorizontal: 12,
-  },
-  link: {
-    textDecorationLine: "underline",
-    fontWeight: "700",
-  },
+  legal: { fontSize: 12, textAlign: "center", marginTop: 30, paddingHorizontal: 12 },
+  link: { textDecorationLine: "underline", fontWeight: "700" },
 });

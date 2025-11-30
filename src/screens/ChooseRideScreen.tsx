@@ -1,11 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  BackHandler,
+} from "react-native";
+
+import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
 import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
 import FareCounter from "../Component/FareCounter";
-
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { useAccessibility } from "../context/AccessibilityContext";
 
@@ -45,6 +52,29 @@ const ChooseRideScreen: React.FC = () => {
   const [destCoords, setDestCoords] = useState<LatLng | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<any[]>([]);
 
+  /* ----------------------------------------------------------
+     FIX ANDROID BACK BUTTON BEHAVIOR (IMPORTANT)
+  -----------------------------------------------------------*/
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        navigation.navigate("Home");
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
+
+  /* ----------------------------------------------------------
+     LOAD AND DRAW ROUTE
+  -----------------------------------------------------------*/
   useEffect(() => {
     async function loadRoute() {
       const coords = await geocodeAddress(destination);
@@ -107,7 +137,7 @@ const ChooseRideScreen: React.FC = () => {
     <View style={styles.container}>
       <LeafletMap ref={mapRef} style={styles.map} />
 
-      {/* LOCATION BOX (Top) */}
+      {/* LOCATION BOX */}
       <View style={styles.locationCard}>
         <View style={styles.markerColumn}>
           <View style={styles.pickupDotOuter}>
@@ -122,14 +152,12 @@ const ChooseRideScreen: React.FC = () => {
         </View>
 
         <View style={{ flex: 1 }}>
-          {/* Pickup */}
           <View style={styles.inputRow}>
             <AccessibleText style={styles.locationText}>
               Jauhar Block 7
             </AccessibleText>
           </View>
 
-          {/* Destination */}
           <View style={styles.inputRow}>
             <AccessibleText style={styles.locationText}>
               {destination}
@@ -156,7 +184,6 @@ const ChooseRideScreen: React.FC = () => {
                   selected && { borderColor: "#00FF66", borderWidth: 2 },
                 ]}
               >
-                {/* Left Side */}
                 <View style={styles.rideLeft}>
                   <View style={styles.rideIconBox}>
                     <AccessibleText style={{ fontSize: 32 }}>
@@ -175,15 +202,12 @@ const ChooseRideScreen: React.FC = () => {
                   </View>
                 </View>
 
-                {/* Right Side */}
                 <View>
                   <AccessibleText style={styles.ridePrice}>
                     Rs. {fareCount[ride.name]}
                   </AccessibleText>
 
-                  <TouchableOpacity
-                    onPress={() => openCustomFare(ride.name)}
-                  >
+                  <TouchableOpacity onPress={() => openCustomFare(ride.name)}>
                     <AccessibleText style={styles.optionsText}>
                       Options
                     </AccessibleText>
@@ -194,7 +218,6 @@ const ChooseRideScreen: React.FC = () => {
           })}
         </ScrollView>
 
-        {/* Bottom Button */}
         <TouchableOpacity
           style={styles.confirmButton}
           onPress={() => {
@@ -214,7 +237,7 @@ const ChooseRideScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Popup for Custom Fare */}
+      {/* Custom Fare Popup */}
       {customVisible && (
         <View style={styles.popupOverlay}>
           <View style={styles.popupBox}>
@@ -232,12 +255,8 @@ const ChooseRideScreen: React.FC = () => {
             </View>
 
             <View style={styles.popupButtons}>
-              <TouchableOpacity
-                onPress={() => setCustomVisible(false)}
-              >
-                <AccessibleText style={styles.popupCancel}>
-                  Cancel
-                </AccessibleText>
+              <TouchableOpacity onPress={() => setCustomVisible(false)}>
+                <AccessibleText style={styles.popupCancel}>Cancel</AccessibleText>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={applyCustomFare}>
@@ -252,6 +271,7 @@ const ChooseRideScreen: React.FC = () => {
 };
 
 export default ChooseRideScreen;
+
 
 /* ======================
    STYLES — MATCH UI EXACTLY

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -8,12 +8,15 @@ import {
 } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
+
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
 import AccessibleText from "./AccessibleText";
-import { useTranslation } from "react-i18next";
 import { useAccessibility } from "../context/AccessibilityContext";
+
+import { logout, loadUsers, getLoggedInUser } from "../backend/authBackend";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -24,15 +27,25 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
   const navigation = useNavigation<NavProp>();
-  const { t } = useTranslation();
   const { colors, borderWidth } = useAccessibility();
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      const phone = await getLoggedInUser();    // returns logged-in phone
+      if (!phone) return;
+
+      const users = await loadUsers();
+      const found = users.find((u: any) => u.phone === phone);
+      setUser(found);
+    })();
+  }, []);
 
   return (
     <>
-      {/* OVERLAY */}
       <TouchableOpacity style={styles.overlay} onPress={onClose} />
 
-      {/* SIDEBAR */}
       <Animated.View
         style={[
           styles.sidebar,
@@ -44,18 +57,17 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
           },
         ]}
       >
-        {/* HEADER SECTION */}
+        {/* HEADER */}
         <View style={styles.header}>
           <Image
-            source={{
-              uri:
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuAkSP1DOTH48-GTn-1xJWqoW4axymhlNvTaGYWFySWrPCKVp0HLFu-xZT5JEUD-ap107K9KvJzdz-LBmO96TiC3sS9prKScSaENDKwfVd3-_q34_aM86YxJnyBk1QjwvFUF19hEw_MCM4A-7Ofcs682JpkjdqbCLXb6ipP3pG1KhbyrjceJgdjI_8P_WGngMzgmtF-88CV6K8_4EMKTy_WE97OWhKfE5Fk_ZKeyAegnQjfHZbJn1L5SwQ9kd_e0p5gJL_cukCIoGkWr",
-            }}
+            source={{ uri: "https://placekitten.com/200/200" }}
             style={styles.avatar}
           />
 
           <View>
-            <AccessibleText style={styles.name}>Saad Imam</AccessibleText>
+            <AccessibleText style={styles.name}>
+              {user?.name || "User"}
+            </AccessibleText>
 
             <TouchableOpacity
               onPress={() => {
@@ -68,38 +80,41 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
               </AccessibleText>
             </TouchableOpacity>
           </View>
-
         </View>
 
-        {/* MENU LIST */}
+        {/* MENU */}
         <View style={styles.menuSection}>
-          {/* Ride History - ACTIVE */}
           <TouchableOpacity
             style={[styles.menuItem, styles.activeItem]}
             onPress={() => navigation.navigate("RideHistory")}
           >
-            <AccessibleText style={[styles.menuIcon, styles.activeIcon]}>🚲</AccessibleText>
+            <AccessibleText style={[styles.menuIcon, styles.activeIcon]}>
+              🚲
+            </AccessibleText>
             <AccessibleText style={[styles.menuLabel, styles.activeLabel]}>
               Ride History
             </AccessibleText>
           </TouchableOpacity>
 
-          {/* Delivery History */}
           <TouchableOpacity style={styles.menuItem}>
             <AccessibleText style={styles.menuIcon}>📦</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Delivery History</AccessibleText>
+            <AccessibleText style={styles.menuLabel}>
+              Delivery History
+            </AccessibleText>
           </TouchableOpacity>
 
-          {/* Payment Methods */}
           <TouchableOpacity style={styles.menuItem}>
             <AccessibleText style={styles.menuIcon}>💳</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Payment Methods</AccessibleText>
+            <AccessibleText style={styles.menuLabel}>
+              Payment Methods
+            </AccessibleText>
           </TouchableOpacity>
 
-          {/* Promotions */}
           <TouchableOpacity style={styles.menuItem}>
             <AccessibleText style={styles.menuIcon}>🏷️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Promotions</AccessibleText>
+            <AccessibleText style={styles.menuLabel}>
+              Promotions
+            </AccessibleText>
           </TouchableOpacity>
         </View>
 
@@ -109,10 +124,15 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
         <View style={styles.menuSection}>
           <TouchableOpacity style={styles.menuItem}>
             <AccessibleText style={styles.menuIcon}>❓</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Help & Support</AccessibleText>
+            <AccessibleText style={styles.menuLabel}>
+              Help & Support
+            </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Accessibility")} >
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate("Accessibility")}
+          >
             <AccessibleText style={styles.menuIcon}>⚙️</AccessibleText>
             <AccessibleText style={styles.menuLabel}>Settings</AccessibleText>
           </TouchableOpacity>
@@ -120,7 +140,20 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
 
         {/* FOOTER */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={async () => {
+              await logout();
+              onClose();
+
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "Auth" }],
+                })
+              );
+            }}
+          >
             <AccessibleText style={styles.menuIcon}>↩️</AccessibleText>
             <AccessibleText style={styles.menuLabel}>Logout</AccessibleText>
           </TouchableOpacity>
@@ -137,18 +170,21 @@ export default Sidebar;
 /* ============================
    STYLES
 ============================ */
-
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
-    top: 0, bottom: 0, left: 0, right: 0,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
     zIndex: 40,
   },
-
   sidebar: {
     position: "absolute",
-    top: 0, bottom: 0, left: 0,
+    top: 0,
+    bottom: 0,
+    left: 0,
     width: "75%",
     maxWidth: 300,
     paddingHorizontal: 20,
@@ -156,8 +192,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     zIndex: 50,
   },
-
-  /* HEADER */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -179,12 +213,7 @@ const styles = StyleSheet.create({
     color: "#0df259",
     marginTop: 2,
   },
-
-  /* MENU LIST */
-  menuSection: {
-    marginBottom: 20,
-  },
-
+  menuSection: { marginBottom: 20 },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -193,42 +222,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 6,
   },
-
-  menuIcon: {
-    fontSize: 20,
-    width: 28,
-    color: "#ccc",
-  },
-
-  menuLabel: {
-    fontSize: 16,
-    color: "white",
-    fontWeight: "500",
-  },
-
-  /* ACTIVE ITEM */
-  activeItem: {
-    backgroundColor: "rgba(13, 242, 89, 0.15)",
-  },
-  activeIcon: {
-    color: "#0df259",
-  },
-  activeLabel: {
-    color: "#0df259",
-    fontWeight: "700",
-  },
-
+  menuIcon: { fontSize: 20, width: 28, color: "#ccc" },
+  menuLabel: { fontSize: 16, color: "white", fontWeight: "500" },
+  activeItem: { backgroundColor: "rgba(13,242,89,0.15)" },
+  activeIcon: { color: "#0df259" },
+  activeLabel: { color: "#0df259", fontWeight: "700" },
   separator: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: "#333",
     marginVertical: 20,
   },
-
-  footer: {
-    marginTop: "auto",
-    alignItems: "flex-start",
-  },
-
+  footer: { marginTop: "auto", alignItems: "flex-start" },
   version: {
     marginTop: 10,
     fontSize: 12,

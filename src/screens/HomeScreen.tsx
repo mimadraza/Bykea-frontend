@@ -41,15 +41,18 @@ const HomeScreen: React.FC = () => {
 
   const [open, setOpen] = useState(false);
   const [slideAnim] = useState(new Animated.Value(-260));
-
   const mapRef = useRef<LeafletMapHandle>(null);
 
   const [mode, setMode] = useState<Mode>("ride");
 
-  // Ride search
+  // RIDE MODE STATE
   const [destination, setDestination] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // DELIVERY MODE STATE
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
 
   const toggleSidebar = () => {
     const toValue = open ? -260 : 0;
@@ -190,106 +193,112 @@ const HomeScreen: React.FC = () => {
         {/* ============================
             RIDE MODE
         ============================ */}
-  {mode === "ride" && (
-    <>
-      {/* Search bar */}
-      <View style={styles.searchBar}>
-        <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
-        <AccessibleTextInput
-          value={destination}
-          onChangeText={handleTyping}
-          placeholder="Search for a destination"
-          style={styles.searchInput}
-        />
-      </View>
-
-      {/* Result area */}
-      <View style={styles.suggestionContainer}>
-
-        {/* SHOW SUGGESTIONS WHEN TYPING */}
-        {destination.trim().length > 0 ? (
-          <FlatList
-            data={suggestions}
-            keyExtractor={(_, i) => i.toString()}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleSelectSuggestion(item)}>
-                <AccessibleText style={styles.suggestionItem}>
-                  {item}
-                </AccessibleText>
-              </TouchableOpacity>
-            )}
-          />
-        ) : (
+        {mode === "ride" && (
           <>
-            {/* SAVED LOCATION 1 */}
-            <TouchableOpacity
-              style={styles.savedItem}
-              onPress={() =>
-                handleSelectSuggestion("IBA University Road, Karachi")
-              }
-            >
-              <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
-              <View style={styles.savedTextWrapper}>
-                <AccessibleText style={styles.savedTitle}>
-                  IBA University Road
-                </AccessibleText>
-                <AccessibleText style={styles.savedSubtitle}>
-                  Karachi, Pakistan
-                </AccessibleText>
-              </View>
-              <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
-            </TouchableOpacity>
+            {/* Search bar */}
+            <View style={styles.searchBar}>
+              <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
+              <AccessibleTextInput
+                value={destination}
+                onChangeText={handleTyping}
+                placeholder="Search for a destination"
+                style={styles.searchInput}
+              />
+            </View>
 
-            {/* SAVED LOCATION 2 */}
-            <TouchableOpacity
-              style={styles.savedItem}
-              onPress={() =>
-                handleSelectSuggestion("Saima Mall, North Nazimabad, Karachi")
-              }
-            >
-              <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
-              <View style={styles.savedTextWrapper}>
-                <AccessibleText style={styles.savedTitle}>
-                  Saima Mall
-                </AccessibleText>
-                <AccessibleText style={styles.savedSubtitle}>
-                  North Nazimabad, Karachi
-                </AccessibleText>
-              </View>
-              <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
-            </TouchableOpacity>
+            {/* Result area */}
+            <View style={styles.suggestionContainer}>
+              {destination.trim().length > 0 ? (
+                <FlatList
+                  data={suggestions}
+                  keyExtractor={(_, i) => i.toString()}
+                  keyboardShouldPersistTaps="handled"
+                  renderItem={({ item }) => (
+                    <TouchableOpacity onPress={() => handleSelectSuggestion(item)}>
+                      <AccessibleText style={styles.suggestionItem}>{item}</AccessibleText>
+                    </TouchableOpacity>
+                  )}
+                />
+              ) : (
+                <>
+                  {/* SAVED LOCATION 1 */}
+                  <TouchableOpacity
+                    style={styles.savedItem}
+                    onPress={() =>
+                      handleSelectSuggestion("IBA University Road, Karachi")
+                    }
+                  >
+                    <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
+                    <View style={styles.savedTextWrapper}>
+                      <AccessibleText style={styles.savedTitle}>
+                        IBA University Road
+                      </AccessibleText>
+                      <AccessibleText style={styles.savedSubtitle}>
+                        Karachi, Pakistan
+                      </AccessibleText>
+                    </View>
+                    <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+                  </TouchableOpacity>
+
+                  {/* SAVED LOCATION 2 */}
+                  <TouchableOpacity
+                    style={styles.savedItem}
+                    onPress={() =>
+                      handleSelectSuggestion("Saima Mall, North Nazimabad, Karachi")
+                    }
+                  >
+                    <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
+                    <View style={styles.savedTextWrapper}>
+                      <AccessibleText style={styles.savedTitle}>Saima Mall</AccessibleText>
+                      <AccessibleText style={styles.savedSubtitle}>
+                        North Nazimabad, Karachi
+                      </AccessibleText>
+                    </View>
+                    <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
           </>
         )}
 
-      </View>
-    </>
-  )}
         {/* ============================
-            DELIVERY MODE (PLACEHOLDERS ONLY)
+            DELIVERY MODE
         ============================ */}
         {mode === "delivery" && (
           <>
-            {/* PICKUP PLACEHOLDER */}
+            {/* PICKUP */}
             <View style={styles.searchBar}>
               <AccessibleText style={styles.searchIcon}>🟢</AccessibleText>
               <AccessibleTextInput
+                value={pickup}
+                onChangeText={setPickup}
                 placeholder="Pickup location"
                 style={styles.searchInput}
               />
             </View>
 
-            {/* DROPOFF PLACEHOLDER */}
+            {/* DROPOFF */}
             <View style={styles.searchBar}>
               <AccessibleText style={styles.searchIcon}>📍</AccessibleText>
               <AccessibleTextInput
+                value={dropoff}
+                onChangeText={setDropoff}
                 placeholder="Drop-off location"
                 style={styles.searchInput}
               />
             </View>
 
             {/* PARCEL DETAILS */}
-            <TouchableOpacity style={styles.deliveryItemRow}>
+            <TouchableOpacity
+              style={styles.deliveryItemRow}
+              onPress={() =>
+                navigation.navigate("ParcelDetails", {
+                  pickup,
+                  dropoff,
+                })
+              }
+            >
               <AccessibleText style={styles.deliveryItemIcon}>📦</AccessibleText>
               <View style={styles.deliveryItemTextWrapper}>
                 <AccessibleText style={styles.deliveryItemTitle}>
@@ -344,16 +353,16 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
- sheetContent: {
-   position: "absolute",
-   bottom: 0,
-   width: "100%",
-   height: "52%",        // 🔑 Match sheetBackground height so top stays fixed
-   paddingHorizontal: 20,
-   paddingTop: 12,
-   paddingBottom: 24,
-   zIndex: 20,
- },
+  sheetContent: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: "52%",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
+    zIndex: 20,
+  },
 
   handleContainer: { alignItems: "center", marginBottom: 4 },
   handle: {
@@ -402,8 +411,6 @@ const styles = StyleSheet.create({
     height: 50,
     marginBottom: 12,
     backgroundColor: "#1A1D23",
-    borderWidth: 0,
-    borderColor: "transparent",
   },
   searchIcon: {
     fontSize: 18,
@@ -415,7 +422,7 @@ const styles = StyleSheet.create({
     height: "100%",
     color: "white",
     backgroundColor: "transparent",
-    borderWidth: 0,
+    borderWidth : 0,
   },
 
   suggestionItem: {
@@ -452,8 +459,9 @@ const styles = StyleSheet.create({
   deliveryItemTextWrapper: { flex: 1 },
   deliveryItemTitle: { fontSize: 15, fontWeight: "600", color: "white" },
   deliveryItemSubtitle: { fontSize: 13, color: "#9CA3AF", marginTop: 2 },
+
   suggestionContainer: {
-    flex: 1,          // 🔑 fills remaining space under the search bar
+    flex: 1,
     marginTop: 4,
   },
 });

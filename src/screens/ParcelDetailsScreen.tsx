@@ -1,249 +1,257 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Image,
   ScrollView,
-  Animated,
 } from "react-native";
-import { WebView } from "react-native-webview";
+
 import AccessibleText from "../Component/AccessibleText";
+import AccessibleTextInput from "../Component/AccessibleTextInput";
 import { useAccessibility } from "../context/AccessibilityContext";
-import html_script from "./html_script";
 
-/* ---------------- INITIAL RIDERS ---------------- */
-const initialRiders = [
-  {
-    id: 1,
-    name: "Asif Gul",
-    time: "5 mins away",
-    rating: 4.95,
-    avatar: require("../assets/user.png"),
-  },
-  {
-    id: 2,
-    name: "Fahad Khan",
-    time: "3 mins away",
-    rating: 4.88,
-    avatar: require("../assets/user.png"),
-  },
-  {
-    id: 3,
-    name: "Umair Ali",
-    time: "7 mins away",
-    rating: 4.99,
-    avatar: require("../assets/user.png"),
-  },
-];
+import LeafletMap, {
+  LeafletMapHandle,
+  LatLng,
+} from "../Component/LeafletMap";
+import { geocodeAddress, getRoute } from "../services/openRouteService";
 
-/* ---------------- LIVE INCOMING RIDERS ---------------- */
-const riderFeed = [
-  {
-    id: 4,
-    name: "Rehan Ahmed",
-    time: "4 mins away",
-    rating: 4.82,
-    avatar: require("../assets/user.png"),
-  },
-  {
-    id: 5,
-    name: "Talha Javed",
-    time: "6 mins away",
-    rating: 4.90,
-    avatar: require("../assets/user.png"),
-  },
-  {
-    id: 6,
-    name: "Moiz Khan",
-    time: "8 mins away",
-    rating: 4.78,
-    avatar: require("../assets/user.png"),
-  },
-];
-
-const SearchingRiderScreen = ({ navigation }) => {
+const ParcelDetailsScreen = ({ navigation, route }) => {
   const { colors, borderWidth } = useAccessibility();
-  const mapRef = useRef(null);
 
-  const [riders, setRiders] = useState(initialRiders);
-  const [incomingRiders, setIncomingRiders] = useState(riderFeed);
-  const [current, setCurrent] = useState(initialRiders[0]);
+  // Receive from HomeScreen (or from back navigation)
+  const initialPickup = route?.params?.pickup || "";
+  const initialDropoff = route?.params?.dropoff || "";
+  const initialItemDescription = route?.params?.itemDescription || "";
+  const initialWeight = route?.params?.weight || "";
+  const initialEstimatedValue = route?.params?.estimatedValue || "";
 
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  // Local editable state
+  const [pickup, setPickup] = useState(initialPickup);
+  const [dropoff, setDropoff] = useState(initialDropoff);
+  const [itemDescription, setItemDescription] =
+    useState(initialItemDescription);
+  const [weight, setWeight] = useState(initialWeight);
+  const [estimatedValue, setEstimatedValue] =
+    useState(initialEstimatedValue);
 
-  /* ---------------- FADE HELPERS ---------------- */
-  const fadeOutIn = (callback) => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 150,
-      useNativeDriver: true,
-    }).start(() => {
-      callback();
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    });
-  };
+  // MAP ROUTE STATE
+  const mapRef = useRef<LeafletMapHandle>(null);
+  const [startCoords, setStartCoords] = useState<LatLng | null>(null);
+  const [endCoords, setEndCoords] = useState<LatLng | null>(null);
+  const [routeGeometry, setRouteGeometry] = useState<any[]>([]);
 
-  /* ---------------- REJECT RIDER ---------------- */
-  const rejectRider = () => {
-    fadeOutIn(() => {
-      if (riders.length <= 1) {
-        setRiders([]);
-        setCurrent(null);
-        return;
-      }
-
-      const newList = riders.slice(1);
-      setRiders(newList);
-      setCurrent(newList[0]);
-    });
-  };
-
-  /* ---------------- AUTO-CYCLE EVERY 8s ---------------- */
+  // Draw initial route if we already have pickup/dropoff
   useEffect(() => {
-    let timer = null;
+    async function loadInitialRoute() {
+      if (!pickup || !dropoff) return;
 
-    if (current) {
-      timer = setInterval(() => {
-        rejectRider();
-      }, 8000);
+      const from = await geocodeAddress(pickup);
+      const to = await geocodeAddress(dropoff);
+      if (!from || !to) return;
+
+      setStartCoords(from);
+      setEndCoords(to);
+
+      const route = await getRoute(from, to);
+      setRouteGeometry(route.geometry);
+
+      mapRef.current?.setRoute({
+        start: from,
+        end: to,
+        geometry: route.geometry,
+      });
     }
 
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [current, riders]);
+    loadInitialRoute();
+  }, []);
 
-  /* ---------------- AUTO-SPAWN NEW RIDERS EVERY 5s ---------------- */
-  useEffect(() => {
-    let spawnTimer = null;
+  // Confirm & go to SearchingRider WITH route for animation
+  const handleConfirm = async () => {
+    if (!pickup || !dropoff) return;
 
-    if (incomingRiders.length > 0) {
-      spawnTimer = setInterval(() => {
-        const next = incomingRiders[0];
-        const rest = incomingRiders.slice(1);
+    let start = startCoords;
+    let end = endCoords;
+    let geometry = routeGeometry;
 
-        setIncomingRiders(rest);
+    // If we don't yet have geometry, calculate now
+    if (!start || !end || !geometry.length) {
+      const from = await geocodeAddress(pickup);
+      const to = await geocodeAddress(dropoff);
+      if (!from || !to) return;
 
-        setRiders((prev) => {
-          const updated = [...prev, next];
-          if (!current) setCurrent(next);
-          return updated;
-        });
-      }, 5000);
+      const route = await getRoute(from, to);
+      start = from;
+      end = to;
+      geometry = route.geometry;
+
+      setStartCoords(from);
+      setEndCoords(to);
+      setRouteGeometry(route.geometry);
     }
 
-    return () => {
-      if (spawnTimer) clearInterval(spawnTimer);
-    };
-  }, [incomingRiders, current]);
+    navigation.navigate("SearchingRider", {
+      pickup,
+      dropoff,
+      start,
+      end,
+      geometry,
+      itemDescription,
+      weight,
+      estimatedValue,
+    });
+  };
 
   return (
     <View style={styles.container}>
-      <WebView
-        ref={mapRef}
-        source={{ html: html_script }}
-        javaScriptEnabled
-        style={styles.map}
-      />
+      {/* MAP */}
+      <LeafletMap ref={mapRef} style={styles.map} />
 
-      {/* ---------------- RIDER CARD ---------------- */}
-      {current && (
-        <Animated.View
-          style={[
-            styles.riderCard,
-            {
-              opacity: fadeAnim,
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-              borderWidth: borderWidth,
-            },
-          ]}
-        >
-          <Image source={current.avatar} style={styles.riderPic} />
+      {/* Bottom Sheet */}
+      <View
+        style={[
+          styles.sheet,
+          { backgroundColor: colors.sheetBackground },
+        ]}
+      >
+        <View style={styles.handleWrapper}>
+          <View className="styles.handle" />
+          <View style={styles.handle} />
+        </View>
 
-          <View style={{ flex: 1 }}>
-            <AccessibleText style={styles.time}>{current.time}</AccessibleText>
-            <AccessibleText style={styles.name}>{current.name}</AccessibleText>
+        <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+          <AccessibleText style={styles.title}>Delivery Details</AccessibleText>
 
-            <View style={styles.ratingRow}>
-              <AccessibleText style={styles.star}>⭐</AccessibleText>
-              <AccessibleText style={styles.rating}>
-                {current.rating}
-              </AccessibleText>
+          {/* PICKUP CARD */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth: borderWidth,
+              },
+            ]}
+          >
+            <AccessibleText style={styles.label}>
+              PICK-UP LOCATION
+            </AccessibleText>
+
+            <View style={styles.row}>
+              <AccessibleText style={styles.icon}>🟢</AccessibleText>
+              <AccessibleTextInput
+                value={pickup}
+                onChangeText={setPickup}
+                placeholder="Pickup location"
+                style={styles.input}
+              />
             </View>
           </View>
 
-          {/* ---------------- ACCEPT BUTTON ---------------- */}
-          <TouchableOpacity
-            style={[styles.acceptBtn, { backgroundColor: colors.primary }]}
-            onPress={() =>
-              navigation.navigate("RideInProgress", {
-                driver: current,
-               from: "ParcelDetails",
-              })
-            }
-          >
-            <AccessibleText style={styles.acceptText}>Accept</AccessibleText>
-          </TouchableOpacity>
-
-          {/* ---------------- REJECT BUTTON ---------------- */}
-          <TouchableOpacity
+          {/* DROPOFF CARD */}
+          <View
             style={[
-              styles.rejectBtn,
+              styles.card,
               {
                 backgroundColor: colors.surface,
-                borderWidth: borderWidth,
                 borderColor: colors.border,
+                borderWidth: borderWidth,
               },
             ]}
-            onPress={rejectRider}
           >
-            <AccessibleText style={styles.rejectText}>Reject</AccessibleText>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+            <AccessibleText style={styles.label}>
+              RECIPIENT’S LOCATION
+            </AccessibleText>
 
-      {/* ---------------- BOTTOM SHEET ---------------- */}
-      <View style={[styles.sheet, { backgroundColor: colors.sheetBackground }]}>
-        <ScrollView contentContainerStyle={styles.wrap}>
-          <View style={[styles.boxCircle, { borderColor: colors.primary }]}>
-            <Image
-              source={require("../assets/box.png")}
-              style={[styles.boxIcon, { tintColor: colors.text }]}
+            <View style={styles.row}>
+              <AccessibleText style={styles.icon}>📍</AccessibleText>
+              <AccessibleTextInput
+                value={dropoff}
+                onChangeText={setDropoff}
+                placeholder="Drop-off location"
+                style={styles.input}
+              />
+            </View>
+          </View>
+
+          {/* PARCEL DETAILS */}
+          <AccessibleText style={styles.sectionTitle}>
+            Parcel Details
+          </AccessibleText>
+
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth: borderWidth,
+              },
+            ]}
+          >
+            <AccessibleTextInput
+              placeholder="Item Description (e.g., Documents)"
+              value={itemDescription}
+              onChangeText={setItemDescription}
+              style={styles.field}
             />
+
+            <View style={styles.rowBetween}>
+              <AccessibleTextInput
+                placeholder="Weight (kg)"
+                value={weight}
+                onChangeText={setWeight}
+                style={styles.fieldHalf}
+              />
+              <AccessibleTextInput
+                placeholder="Estimated Value"
+                value={estimatedValue}
+                onChangeText={setEstimatedValue}
+                style={styles.fieldHalf}
+              />
+            </View>
           </View>
 
-          <View style={styles.counterRow}>
-            <TouchableOpacity
-              style={[styles.counterBtn, { backgroundColor: colors.surface }]}
-            >
-              <AccessibleText style={styles.counterBtnText}>-</AccessibleText>
-            </TouchableOpacity>
-
-            <AccessibleText style={styles.counterValue}>124</AccessibleText>
-
-            <TouchableOpacity
-              style={[styles.counterBtn, { backgroundColor: colors.surface }]}
-            >
-              <AccessibleText style={styles.counterBtnText}>+</AccessibleText>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.keepBtn, { backgroundColor: colors.surface }]}
+          {/* SERVICE OPTION */}
+          <View
+            style={[
+              styles.serviceCard,
+              {
+                borderColor: colors.primary,
+                backgroundColor: colors.surface,
+                borderWidth: borderWidth + 1,
+              },
+            ]}
           >
-            <AccessibleText style={styles.keepText}>KEEP LOOKING</AccessibleText>
-          </TouchableOpacity>
+            <AccessibleText style={styles.serviceEmoji}>🏍️</AccessibleText>
 
-          <TouchableOpacity style={styles.cancelBtn} onPress={() =>
-                                                                   navigation.navigate("DeliveryDetails")
-                                                                 } >
-            <AccessibleText style={styles.cancelText}>CANCEL RIDE</AccessibleText>
+            <View style={{ flex: 1 }}>
+              <AccessibleText style={styles.serviceTitle}>
+                Bykea Delivery
+              </AccessibleText>
+              <AccessibleText style={styles.serviceSubtitle}>
+                Documents & Parcels
+              </AccessibleText>
+            </View>
+
+            <AccessibleText
+              style={[styles.servicePrice, { color: colors.primary }]}
+            >
+              Rs. 90
+            </AccessibleText>
+          </View>
+
+          {/* CONFIRM BUTTON */}
+          <TouchableOpacity
+            style={[
+              styles.confirmButton,
+              { backgroundColor: colors.primary },
+            ]}
+            onPress={handleConfirm}
+          >
+            <AccessibleText style={styles.confirmText}>
+              Confirm Delivery
+            </AccessibleText>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -251,102 +259,122 @@ const SearchingRiderScreen = ({ navigation }) => {
   );
 };
 
-export default SearchingRiderScreen;
+export default ParcelDetailsScreen;
 
-/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  map: { position: "absolute", width: "100%", height: "100%" },
-
-  riderCard: {
-    position: "absolute",
-    top: 60,
-    left: 20,
-    right: 20,
-    borderRadius: 20,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 10,
-  },
-
-  riderPic: { width: 55, height: 55, borderRadius: 50, marginRight: 12 },
-
-  time: { fontSize: 18, fontWeight: "bold" },
-  name: { fontSize: 14, opacity: 0.8, marginBottom: 4 },
-
-  ratingRow: { flexDirection: "row", alignItems: "center" },
-  star: { fontSize: 16, marginRight: 4 },
-  rating: { fontSize: 14 },
-
-  acceptBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 8,
-  },
-  acceptText: { color: "#1A1A1A", fontWeight: "bold" },
-
-  rejectBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 8,
-  },
-  rejectText: { fontWeight: "bold" },
+  map: { position: "absolute", width: "100%", height: "100%", zIndex: 1 },
 
   sheet: {
     position: "absolute",
     bottom: 0,
     width: "100%",
-    height: "44%",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    zIndex: 5,
+    height: "65%",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    zIndex: 10,
   },
 
-  wrap: { padding: 20, alignItems: "center" },
+  handleWrapper: { alignItems: "center", marginBottom: 8 },
+  handle: {
+    width: 50,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#666",
+  },
 
-  boxCircle: {
-    width: 120,
-    height: 120,
-    borderWidth: 3,
-    borderRadius: 100,
-    justifyContent: "center",
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "white",
+    marginBottom: 10,
+  },
+  label: {
+    color: "#B0B0B0",
+    marginBottom: 4,
+    fontSize: 13,
+  },
+  row: {
+    flexDirection: "row",
     alignItems: "center",
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "spaceBetween",
+  },
+  input: {
+    flex: 1,
+    color: "white",
+    borderRadius: 5,
+  },
+  icon: {
+    fontSize: 20,
+    marginRight: 8,
+    color: "white",
+  },
+
+  card: {
+    padding: 14,
+    borderRadius: 12,
     marginBottom: 20,
   },
 
-  boxIcon: { width: 65, height: 65 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "white",
+    marginBottom: 10,
+  },
 
-  counterRow: {
+  field: {
+    marginBottom: 12,
+    color: "white",
+    borderRadius: 5,
+  },
+  fieldHalf: {
+    width: "48%",
+    color: "white",
+    borderRadius: 5,
+  },
+
+  serviceCard: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 14,
+    borderRadius: 12,
     marginBottom: 25,
   },
 
-  counterBtn: { padding: 16, borderRadius: 40 },
-  counterBtnText: { fontSize: 30, fontWeight: "bold" },
-
-  counterValue: { fontSize: 38, fontWeight: "bold", marginHorizontal: 20 },
-
-  keepBtn: {
-    paddingVertical: 16,
-    width: "100%",
-    borderRadius: 14,
-    alignItems: "center",
-    marginBottom: 15,
+  serviceEmoji: {
+    fontSize: 45,
+    marginRight: 14,
   },
 
-  keepText: { fontWeight: "bold" },
-
-  cancelBtn: {
-    backgroundColor: "#c62828",
-    paddingVertical: 16,
-    width: "100%",
-    borderRadius: 14,
-    alignItems: "center",
+  serviceTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "white",
+  },
+  serviceSubtitle: {
+    fontSize: 14,
+    color: "#9CA3AF",
+  },
+  servicePrice: {
+    fontSize: 18,
+    fontWeight: "700",
   },
 
-  cancelText: { color: "white", fontWeight: "bold" },
+  confirmButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  confirmText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "700",
+  },
 });

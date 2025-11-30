@@ -1,75 +1,44 @@
 import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { useAccessibility } from "../context/AccessibilityContext";
-
-import Logo from "../Component/Logo"; // your actual RN logo component
+import Logo from "../Component/Logo";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Splash">;
-
-const { width } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useAccessibility();
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace("Auth");
-    }, 2000);
+    const timer = setTimeout(async () => {
+      const phone = await AsyncStorage.getItem("LOGGED_IN_USER");
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: phone ? "Home" : "Auth" }],
+      });
+    }, 1800);
+
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: colors.background },
-      ]}
-    >
-      {/* HERO IMAGE */}
-      <View style={styles.heroWrapper}>
-        <Image
-          source={{
-            uri:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuAPznTvKqgc4Ec-e-gGBeyiTDDbdvvY8_VqRZ4dsekpzd49n5Rg04SEyQ0LuqujcbUQHGwKarxdACdr8LyExHBEhJQh_mP6sdbT4u3H9ECt2zzInkVbQG-MMn5om2uM2tdIcBH0Uvl-DWW06qzR3V0O36xKOipcOfU1YU8g5bYdgBcnD4qzsHS4cf3cRS_pkwLFmDG-tympCDYOD2bMaNXKqDtLtWD0LB3Ddb2dEbBXcKfV_-KJaNwdg5lBQAuABf9VGFpt6hXYOAOj",
-          }}
-          style={styles.heroImage}
-          resizeMode="cover"
-          accessible
-          accessibilityLabel="City illustration showing a scooter rider"
-        />
+    <View style={styles.container}>
+      <Image
+        source={{ uri: "https://images.unsplash.com/photo-150..." }}
+        style={styles.heroImage}
+      />
 
-        {/* GRADIENT MASK TO MATCH HTML */}
-        <LinearGradient
-          colors={["rgba(0,0,0,1)", "rgba(0,0,0,0)"]}
-          start={{ x: 0.5, y: 0.3 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.gradientMask}
-          pointerEvents="none"
-        />
-      </View>
+      <LinearGradient
+        colors={["rgba(0,0,0,1)", "transparent"]}
+        style={styles.gradientMask}
+      />
 
-      {/* LOGO + HEADINGS */}
       <View style={styles.centerContent}>
-        <View style={styles.logoWrapper}>
-          <Logo size={64} accessibilityLabel="Bykea App Logo" />
-        </View>
-
-        <Text style={[styles.headline, { color: "#fff" }]}>
-          Your City, Your Ride
-        </Text>
-
-        <Text style={[styles.body, { color: "rgba(255,255,255,0.8)" }]}>
-          Rides, Deliveries, and More.
-        </Text>
+        <Logo size={64} />
+        <Text style={styles.headline}>Your City, Your Ride</Text>
+        <Text style={styles.body}>Rides, Deliveries, and More.</Text>
       </View>
     </View>
   );
@@ -77,60 +46,31 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
 export default SplashScreen;
 
-const HERO_HEIGHT = Dimensions.get("window").height * 0.60;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    width: "100%",
-    height: "100%",
-  },
-
-  heroWrapper: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    height: HERO_HEIGHT,
-    overflow: "hidden",
-  },
-
+  container: { flex: 1, backgroundColor: "black" },
   heroImage: {
     width: "100%",
-    height: "100%",
+    height: height * 0.55,
+    position: "absolute",
+    top: 0,
   },
-
   gradientMask: {
     position: "absolute",
-    bottom: 0,
+    height: height * 0.35,
+    bottom: height * 0.45,
     width: "100%",
-    height: HERO_HEIGHT * 0.5,
   },
-
   centerContent: {
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
-
-  logoWrapper: {
-    marginBottom: 24,
-  },
-
   headline: {
+    color: "#fff",
     fontSize: 32,
     fontWeight: "700",
-    textAlign: "center",
-    lineHeight: 36,
-    marginTop: 16,
+    marginTop: 20,
   },
-
-  body: {
-    fontSize: 16,
-    fontWeight: "400",
-    textAlign: "center",
-    marginTop: 8,
-  },
+  body: { color: "#ccc", fontSize: 15, marginTop: 6 },
 });

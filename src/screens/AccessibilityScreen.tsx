@@ -4,12 +4,13 @@ import {
   ScrollView,
   StyleSheet,
   Linking,
-  Platform,
   AccessibilityInfo,
 } from "react-native";
+
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+
 import { useTranslation } from "react-i18next";
 
 import SectionTitle from "../Component/SectionTitle";
@@ -38,10 +39,8 @@ const AccessibilityScreen: React.FC = () => {
     colors,
   } = useAccessibility();
 
-  // System-level screen reader (TalkBack / VoiceOver)
   const [screenReaderOn, setScreenReaderOn] = useState(false);
 
-  // Initial state + subscription to changes
   useEffect(() => {
     let mounted = true;
 
@@ -74,18 +73,16 @@ const AccessibilityScreen: React.FC = () => {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        {/* -------------------- VISION SECTION -------------------- */}
         <SectionTitle text={t("vision")} />
 
-        {/* SYSTEM SCREEN READER STATUS ROW */}
         <SettingsRow
           title={t("screen_reader")}
           subtitle={t("screen_reader_sub")}
-          // New prop: shows "On"/"Off" instead of a switch
           valueText={screenReaderOn ? t("on") : t("off")}
           onPress={openSystemAccessibilitySettings}
-          // Accessibility: clearly a button that opens system settings
           accessibilityLabel={t("screen_reader")}
-          accessibilityHint={t("screen_reader_hint")} // e.g. "Opens device accessibility settings"
+          accessibilityHint={t("screen_reader_hint")}
           accessibilityRole="button"
         />
 
@@ -97,22 +94,31 @@ const AccessibilityScreen: React.FC = () => {
         />
 
         <SettingsRow
-          title="High Contrast"
-          subtitle="Increase visibility & borders"
+          title={t("high_contrast")}
+          subtitle={t("high_contrast_sub")}
           value={highContrast}
           onChange={toggleHighContrast}
         />
 
+        {/* -------------------- LANGUAGE SECTION -------------------- */}
         <SectionTitle text={t("language")} />
-        <SettingsRow title={t("urdu")} value={isUrdu} onChange={toggleUrdu} />
 
-        <SectionTitle text={t("general")} />
         <SettingsRow
-          title="Dark Mode"
-          subtitle="Toggle light/dark theme"
+          title={t("urdu")}
+          value={isUrdu}
+          onChange={toggleUrdu}
+        />
+
+        {/* -------------------- GENERAL SECTION -------------------- */}
+        <SectionTitle text={t("general")} />
+
+        <SettingsRow
+          title={t("dark_mode")}
+          subtitle={t("dark_mode_sub")}
           value={isDarkMode}
           onChange={toggleTheme}
         />
+
         <SettingsRow
           title={t("larger_text")}
           subtitle={t("larger_text_sub")}

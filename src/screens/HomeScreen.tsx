@@ -38,6 +38,7 @@ type Mode = "ride" | "delivery";
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const { colors } = useAccessibility();
+  const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
   const [slideAnim] = useState(new Animated.Value(-260));
@@ -113,7 +114,7 @@ const HomeScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* MAP */}
       <LeafletMap ref={mapRef} style={styles.map} />
 
@@ -125,16 +126,43 @@ const HomeScreen: React.FC = () => {
 
       {/* MAP CONTROLS */}
       <View style={styles.mapControls}>
-        <TouchableOpacity style={styles.mapControlButton}>
-          <AccessibleText style={styles.mapControlText}>+</AccessibleText>
+        <TouchableOpacity
+          style={[
+            styles.mapControlButton,
+            { backgroundColor: colors.cardBackground },
+          ]}
+        >
+          <AccessibleText
+            style={[styles.mapControlText, { color: colors.text }]}
+          >
+            +
+          </AccessibleText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.mapControlButton}>
-          <AccessibleText style={styles.mapControlText}>−</AccessibleText>
+        <TouchableOpacity
+          style={[
+            styles.mapControlButton,
+            { backgroundColor: colors.cardBackground },
+          ]}
+        >
+          <AccessibleText
+            style={[styles.mapControlText, { color: colors.text }]}
+          >
+            −
+          </AccessibleText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.mapControlButton}>
-          <AccessibleText style={styles.mapControlText}>⚙︎</AccessibleText>
+        <TouchableOpacity
+          style={[
+            styles.mapControlButton,
+            { backgroundColor: colors.cardBackground },
+          ]}
+        >
+          <AccessibleText
+            style={[styles.mapControlText, { color: colors.text }]}
+          >
+            ⚙︎
+          </AccessibleText>
         </TouchableOpacity>
       </View>
 
@@ -149,64 +177,104 @@ const HomeScreen: React.FC = () => {
       {/* BOTTOM SHEET CONTENT */}
       <View style={styles.sheetContent}>
         <View style={styles.handleContainer}>
-          <View style={styles.handle} />
+          <View
+            style={[styles.handle, { backgroundColor: colors.border }]}
+          />
         </View>
 
-        <AccessibleText style={styles.sheetTitle}>
-          {mode === "ride" ? "Where would you like to go?" : "Send a parcel"}
+        <AccessibleText
+          style={[styles.sheetTitle, { color: colors.text }]}
+        >
+          {mode === "ride"
+            ? t("home_where_to")
+            : t("home_send_parcel")}
         </AccessibleText>
 
         {/* MODE SWITCHER */}
-        <View style={styles.modeToggle}>
+        <View
+          style={[
+            styles.modeToggle,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          {/* RIDE BUTTON */}
           <TouchableOpacity
-            style={[styles.modeButton, mode === "ride" && styles.modeButtonActive]}
+            style={[
+              styles.modeButton,
+              mode === "ride" && {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderRadius: 5,
+              },
+            ]}
             onPress={() => setMode("ride")}
           >
             <AccessibleText
               style={[
                 styles.modeButtonText,
-                mode === "ride" && styles.modeButtonTextActive,
+                { color: colors.textSecondary },
+                mode === "ride" && { color: colors.text },
               ]}
             >
-              Ride
+              {t("home_mode_ride")}
             </AccessibleText>
           </TouchableOpacity>
 
+          {/* DELIVERY BUTTON */}
           <TouchableOpacity
             style={[
               styles.modeButton,
-              mode === "delivery" && styles.modeButtonActive,
+              mode === "delivery" && {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderRadius: 5,
+              },
             ]}
             onPress={() => setMode("delivery")}
           >
             <AccessibleText
               style={[
                 styles.modeButtonText,
-                mode === "delivery" && styles.modeButtonTextActive,
+                { color: colors.textSecondary },
+                mode === "delivery" && { color: colors.text },
               ]}
             >
-              Delivery
+              {t("home_mode_delivery")}
             </AccessibleText>
           </TouchableOpacity>
         </View>
 
         {/* ============================
-            RIDE MODE
+            RIDE MODE UI
         ============================ */}
         {mode === "ride" && (
           <>
             {/* Search bar */}
-            <View style={styles.searchBar}>
-              <AccessibleText style={styles.searchIcon}>🔍</AccessibleText>
+            <View
+              style={[
+                styles.searchBar,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <AccessibleText
+                style={[styles.searchIcon, { color: colors.icon }]}
+              >
+                🔍
+              </AccessibleText>
               <AccessibleTextInput
                 value={destination}
                 onChangeText={handleTyping}
-                placeholder="Search for a destination"
-                style={styles.searchInput}
+                placeholder={t("home_search_destination")}
+                style={[styles.searchInput, { color: colors.text }]}
               />
             </View>
 
-            {/* Result area */}
             <View style={styles.suggestionContainer}>
               {destination.trim().length > 0 ? (
                 <FlatList
@@ -214,8 +282,20 @@ const HomeScreen: React.FC = () => {
                   keyExtractor={(_, i) => i.toString()}
                   keyboardShouldPersistTaps="handled"
                   renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleSelectSuggestion(item)}>
-                      <AccessibleText style={styles.suggestionItem}>{item}</AccessibleText>
+                    <TouchableOpacity
+                      onPress={() => handleSelectSuggestion(item)}
+                    >
+                      <AccessibleText
+                        style={[
+                          styles.suggestionItem,
+                          {
+                            color: colors.text,
+                            borderBottomColor: colors.border,
+                          },
+                        ]}
+                      >
+                        {item}
+                      </AccessibleText>
                     </TouchableOpacity>
                   )}
                 />
@@ -223,38 +303,98 @@ const HomeScreen: React.FC = () => {
                 <>
                   {/* SAVED LOCATION 1 */}
                   <TouchableOpacity
-                    style={styles.savedItem}
+                    style={[
+                      styles.savedItem,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() =>
-                      handleSelectSuggestion("IBA University Road, Karachi")
+                      handleSelectSuggestion(
+                        "IBA University Road, Karachi"
+                      )
                     }
                   >
-                    <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
+                    <AccessibleText
+                      style={[
+                        styles.savedIcon,
+                        { color: colors.icon },
+                      ]}
+                    >
+                      📍
+                    </AccessibleText>
                     <View style={styles.savedTextWrapper}>
-                      <AccessibleText style={styles.savedTitle}>
-                        IBA University Road
+                      <AccessibleText
+                        style={[
+                          styles.savedTitle,
+                          { color: colors.text },
+                        ]}
+                      >
+                        {t("home_saved_iba_title")}
                       </AccessibleText>
-                      <AccessibleText style={styles.savedSubtitle}>
-                        Karachi, Pakistan
+                      <AccessibleText
+                        style={[
+                          styles.savedSubtitle,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {t("home_saved_iba_subtitle")}
                       </AccessibleText>
                     </View>
-                    <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+                    <AccessibleText
+                      style={[
+                        styles.chevron,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {">"}
+                    </AccessibleText>
                   </TouchableOpacity>
 
                   {/* SAVED LOCATION 2 */}
                   <TouchableOpacity
-                    style={styles.savedItem}
+                    style={[
+                      styles.savedItem,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() =>
-                      handleSelectSuggestion("Saima Mall, North Nazimabad, Karachi")
+                      handleSelectSuggestion(
+                        "Saima Mall, North Nazimabad, Karachi"
+                      )
                     }
                   >
-                    <AccessibleText style={styles.savedIcon}>📍</AccessibleText>
+                    <AccessibleText
+                      style={[
+                        styles.savedIcon,
+                        { color: colors.icon },
+                      ]}
+                    >
+                      📍
+                    </AccessibleText>
                     <View style={styles.savedTextWrapper}>
-                      <AccessibleText style={styles.savedTitle}>Saima Mall</AccessibleText>
-                      <AccessibleText style={styles.savedSubtitle}>
-                        North Nazimabad, Karachi
+                      <AccessibleText
+                        style={[
+                          styles.savedTitle,
+                          { color: colors.text },
+                        ]}
+                      >
+                        {t("home_saved_saima_title")}
+                      </AccessibleText>
+                      <AccessibleText
+                        style={[
+                          styles.savedSubtitle,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {t("home_saved_saima_subtitle")}
                       </AccessibleText>
                     </View>
-                    <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+                    <AccessibleText
+                      style={[
+                        styles.chevron,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {">"}
+                    </AccessibleText>
                   </TouchableOpacity>
                 </>
               )}
@@ -263,35 +403,55 @@ const HomeScreen: React.FC = () => {
         )}
 
         {/* ============================
-            DELIVERY MODE
+            DELIVERY MODE UI
         ============================ */}
         {mode === "delivery" && (
           <>
             {/* PICKUP */}
-            <View style={styles.searchBar}>
-              <AccessibleText style={styles.searchIcon}>🟢</AccessibleText>
+            <View
+              style={[
+                styles.searchBar,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <AccessibleText
+                style={[styles.searchIcon, { color: colors.icon }]}
+              >
+                🟢
+              </AccessibleText>
               <AccessibleTextInput
                 value={pickup}
                 onChangeText={setPickup}
-                placeholder="Pickup location"
-                style={styles.searchInput}
+                placeholder={t("home_pickup_placeholder")}
+                style={[styles.searchInput, { color: colors.text }]}
               />
             </View>
 
             {/* DROPOFF */}
-            <View style={styles.searchBar}>
-              <AccessibleText style={styles.searchIcon}>📍</AccessibleText>
+            <View
+              style={[
+                styles.searchBar,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <AccessibleText
+                style={[styles.searchIcon, { color: colors.icon }]}
+              >
+                📍
+              </AccessibleText>
               <AccessibleTextInput
                 value={dropoff}
                 onChangeText={setDropoff}
-                placeholder="Drop-off location"
-                style={styles.searchInput}
+                placeholder={t("home_dropoff_placeholder")}
+                style={[styles.searchInput, { color: colors.text }]}
               />
             </View>
 
-            {/* PARCEL DETAILS */}
             <TouchableOpacity
-              style={styles.deliveryItemRow}
+              style={[
+                styles.deliveryItemRow,
+                { borderBottomColor: colors.border },
+              ]}
               onPress={() =>
                 navigation.navigate("ParcelDetails", {
                   pickup,
@@ -299,16 +459,40 @@ const HomeScreen: React.FC = () => {
                 })
               }
             >
-              <AccessibleText style={styles.deliveryItemIcon}>📦</AccessibleText>
+              <AccessibleText
+                style={[
+                  styles.deliveryItemIcon,
+                  { color: colors.icon },
+                ]}
+              >
+                📦
+              </AccessibleText>
               <View style={styles.deliveryItemTextWrapper}>
-                <AccessibleText style={styles.deliveryItemTitle}>
-                  Parcel Details
+                <AccessibleText
+                  style={[
+                    styles.deliveryItemTitle,
+                    { color: colors.text },
+                  ]}
+                >
+                  {t("home_parcel_details_title")}
                 </AccessibleText>
-                <AccessibleText style={styles.deliveryItemSubtitle}>
-                  Add weight, size, and category
+                <AccessibleText
+                  style={[
+                    styles.deliveryItemSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {t("home_parcel_details_subtitle")}
                 </AccessibleText>
               </View>
-              <AccessibleText style={styles.chevron}>{">"}</AccessibleText>
+              <AccessibleText
+                style={[
+                  styles.chevron,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                {">"}
+              </AccessibleText>
             </TouchableOpacity>
           </>
         )}
@@ -339,9 +523,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
-    backgroundColor: "#1A1D23",
   },
-  mapControlText: { fontSize: 18, fontWeight: "700", color: "white" },
+  mapControlText: { fontSize: 18, fontWeight: "700" },
 
   sheetBackground: {
     position: "absolute",
@@ -369,14 +552,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 5,
     borderRadius: 999,
-    backgroundColor: "#2E3340",
   },
 
   sheetTitle: {
     fontSize: 25,
     fontWeight: "700",
     marginBottom: 4,
-    color: "white",
   },
 
   modeToggle: {
@@ -384,7 +565,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 4,
     marginBottom: 10,
-    backgroundColor: "#1A1D23",
   },
   modeButton: {
     flex: 1,
@@ -393,15 +573,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 8,
   },
-  modeButtonActive: {
-    backgroundColor: "#2E3340",
-  },
   modeButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#9CA3AF",
   },
-  modeButtonTextActive: { color: "#FFFFFF" },
 
   searchBar: {
     flexDirection: "row",
@@ -410,25 +585,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 50,
     marginBottom: 12,
-    backgroundColor: "#1A1D23",
   },
   searchIcon: {
     fontSize: 18,
     marginRight: 10,
-    color: "#9CA3AF",
   },
   searchInput: {
     flex: 1,
     height: "100%",
-    color: "white",
     backgroundColor: "transparent",
-    borderWidth : 0,
+    borderWidth: 0,
+  },
+
+  suggestionContainer: {
+    flex: 1,
+    marginTop: 4,
   },
 
   suggestionItem: {
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    color: "white",
   },
 
   savedItem: {
@@ -436,32 +612,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#374151",
   },
-  savedIcon: { fontSize: 20, marginRight: 12, color: "white" },
+  savedIcon: { fontSize: 20, marginRight: 12 },
   savedTextWrapper: { flex: 1 },
-  savedTitle: { fontSize: 15, fontWeight: "600", color: "white" },
-  savedSubtitle: { fontSize: 13, color: "#9CA3AF", marginTop: 2 },
-  chevron: { fontSize: 18, color: "#9CA3AF" },
+  savedTitle: { fontSize: 15, fontWeight: "600" },
+  savedSubtitle: { fontSize: 13, marginTop: 2 },
+  chevron: { fontSize: 18 },
 
   deliveryItemRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#374151",
   },
-  deliveryItemIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    color: "#fff",
-  },
+  deliveryItemIcon: { fontSize: 20, marginRight: 12 },
   deliveryItemTextWrapper: { flex: 1 },
-  deliveryItemTitle: { fontSize: 15, fontWeight: "600", color: "white" },
-  deliveryItemSubtitle: { fontSize: 13, color: "#9CA3AF", marginTop: 2 },
-
-  suggestionContainer: {
-    flex: 1,
-    marginTop: 4,
-  },
+  deliveryItemTitle: { fontSize: 15, fontWeight: "600" },
+  deliveryItemSubtitle: { fontSize: 13, marginTop: 2 },
 });

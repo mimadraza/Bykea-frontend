@@ -36,7 +36,7 @@ const RideRequestScreen: React.FC = () => {
   const route = useRoute();
   const { destination } = route.params || {};
   const { t } = useTranslation();
-  const { colors } = useAccessibility();
+  const { colors, borderWidth, highContrast } = useAccessibility();
 
   const mapRef = useRef<WebView>(null);
 
@@ -69,9 +69,12 @@ const RideRequestScreen: React.FC = () => {
       setOffers((current) => {
         if (current.length >= 4) return current;
 
-        const random = DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
+        const random =
+          DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
 
-        const translatedEta = `${random.eta.split(" ")[0]} ${t("driver_offer_eta")}`;
+        const translatedEta = `${random.eta.split(" ")[0]} ${t(
+          "driver_offer_eta"
+        )}`;
 
         const newOffer: DriverOffer = {
           id: Date.now().toString() + Math.random().toString(16).slice(2),
@@ -83,10 +86,13 @@ const RideRequestScreen: React.FC = () => {
 
         const addTwo = Math.random() < 0.4;
         if (addTwo) {
-          const another = DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
+          const another =
+            DRIVER_POOL[Math.floor(Math.random() * DRIVER_POOL.length)];
 
           const second: DriverOffer = {
-            id: (Date.now() + 1).toString() + Math.random().toString(16).slice(2),
+            id:
+              (Date.now() + 1).toString() +
+              Math.random().toString(16).slice(2),
             name: another.name,
             eta: `${another.eta.split(" ")[0]} ${t("driver_offer_eta")}`,
             rating: another.rating,
@@ -101,7 +107,7 @@ const RideRequestScreen: React.FC = () => {
     }, 7000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   const handleReject = (id: string) => {
     setOffers((prev) => prev.filter((o) => o.id !== id));
@@ -110,7 +116,7 @@ const RideRequestScreen: React.FC = () => {
   const handleAccept = (offer: DriverOffer) => {
     navigation.navigate("RideInProgress", {
       driver: offer,
-      fare: offer.price, // <-- Use driver’s actual offered fare
+      fare: offer.price,
       from: "RiderRequest",
       start,
       end,
@@ -121,7 +127,7 @@ const RideRequestScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <WebView
         ref={mapRef}
         source={{ html: html_script }}
@@ -146,12 +152,28 @@ const RideRequestScreen: React.FC = () => {
         ))}
       </View>
 
-      <View style={styles.bottomCard}>
-        <AccessibleText style={styles.rideTitle}>
+      <View
+        style={[
+          styles.bottomCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.primary,
+            borderWidth: highContrast ? borderWidth : 2,
+          },
+        ]}
+      >
+        <AccessibleText
+          style={[styles.rideTitle, { color: colors.text }]}
+        >
           {t(`${rideType.toLowerCase()}_name`)}
         </AccessibleText>
 
-        <View style={styles.rideIconWrapper}>
+        <View
+          style={[
+            styles.rideIconWrapper,
+            { backgroundColor: colors.surface },
+          ]}
+        >
           <AccessibleText style={styles.rideIcon}>
             {RIDE_META[rideType].icon}
           </AccessibleText>
@@ -208,17 +230,13 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 15,
     right: 15,
-    backgroundColor: "#25282B",
     borderRadius: 24,
     paddingVertical: 18,
     paddingHorizontal: 20,
     zIndex: 40,
-    borderWidth: 2,
-    borderColor: "#3dff73",
   },
 
   rideTitle: {
-    color: "white",
     fontSize: 16,
     fontWeight: "700",
     textAlign: "center",
@@ -230,7 +248,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#1F2124",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,

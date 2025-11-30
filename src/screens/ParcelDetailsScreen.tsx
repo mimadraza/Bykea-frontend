@@ -14,34 +14,31 @@ import LeafletMap, {
   LeafletMapHandle,
   LatLng,
 } from "../Component/LeafletMap";
+
 import { geocodeAddress, getRoute } from "../services/openRouteService";
+import { useTranslation } from "react-i18next";
 
 const ParcelDetailsScreen = ({ navigation, route }) => {
   const { colors, borderWidth } = useAccessibility();
+  const { t } = useTranslation();
 
-  // Receive from HomeScreen (or from back navigation)
   const initialPickup = route?.params?.pickup || "";
   const initialDropoff = route?.params?.dropoff || "";
   const initialItemDescription = route?.params?.itemDescription || "";
   const initialWeight = route?.params?.weight || "";
   const initialEstimatedValue = route?.params?.estimatedValue || "";
 
-  // Local editable state
   const [pickup, setPickup] = useState(initialPickup);
   const [dropoff, setDropoff] = useState(initialDropoff);
-  const [itemDescription, setItemDescription] =
-    useState(initialItemDescription);
+  const [itemDescription, setItemDescription] = useState(initialItemDescription);
   const [weight, setWeight] = useState(initialWeight);
-  const [estimatedValue, setEstimatedValue] =
-    useState(initialEstimatedValue);
+  const [estimatedValue, setEstimatedValue] = useState(initialEstimatedValue);
 
-  // MAP ROUTE STATE
   const mapRef = useRef<LeafletMapHandle>(null);
   const [startCoords, setStartCoords] = useState<LatLng | null>(null);
   const [endCoords, setEndCoords] = useState<LatLng | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<any[]>([]);
 
-  // Draw initial route if we already have pickup/dropoff
   useEffect(() => {
     async function loadInitialRoute() {
       if (!pickup || !dropoff) return;
@@ -62,11 +59,9 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
         geometry: route.geometry,
       });
     }
-
     loadInitialRoute();
   }, []);
 
-  // Confirm & go to SearchingRider WITH route for animation
   const handleConfirm = async () => {
     if (!pickup || !dropoff) return;
 
@@ -74,7 +69,6 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
     let end = endCoords;
     let geometry = routeGeometry;
 
-    // If we don't yet have geometry, calculate now
     if (!start || !end || !geometry.length) {
       const from = await geocodeAddress(pickup);
       const to = await geocodeAddress(dropoff);
@@ -104,10 +98,8 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      {/* MAP */}
       <LeafletMap ref={mapRef} style={styles.map} />
 
-      {/* Bottom Sheet */}
       <View
         style={[
           styles.sheet,
@@ -115,12 +107,13 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
         ]}
       >
         <View style={styles.handleWrapper}>
-          <View className="styles.handle" />
-          <View style={styles.handle} />
+          <View style={[styles.handle, { backgroundColor: colors.border }]} />
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
-          <AccessibleText style={styles.title}>Delivery Details</AccessibleText>
+          <AccessibleText style={[styles.title, { color: colors.text }]}>
+            {t("parcel_title")}
+          </AccessibleText>
 
           {/* PICKUP CARD */}
           <View
@@ -133,22 +126,22 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
               },
             ]}
           >
-            <AccessibleText style={styles.label}>
-              PICK-UP LOCATION
+            <AccessibleText style={[styles.label, { color: colors.textSecondary }]}>
+              {t("parcel_pickup_label")}
             </AccessibleText>
 
             <View style={styles.row}>
-              <AccessibleText style={styles.icon}>🟢</AccessibleText>
+              <AccessibleText style={[styles.icon, { color: colors.icon }]}>🟢</AccessibleText>
               <AccessibleTextInput
                 value={pickup}
                 onChangeText={setPickup}
-                placeholder="Pickup location"
-                style={styles.input}
+                placeholder={t("parcel_pickup_placeholder")}
+                style={[styles.input, { color: colors.text }]}
               />
             </View>
           </View>
 
-          {/* DROPOFF CARD */}
+          {/* DROPOFF */}
           <View
             style={[
               styles.card,
@@ -159,24 +152,24 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
               },
             ]}
           >
-            <AccessibleText style={styles.label}>
-              RECIPIENT’S LOCATION
+            <AccessibleText style={[styles.label, { color: colors.textSecondary }]}>
+              {t("parcel_dropoff_label")}
             </AccessibleText>
 
             <View style={styles.row}>
-              <AccessibleText style={styles.icon}>📍</AccessibleText>
+              <AccessibleText style={[styles.icon, { color: colors.icon }]}>📍</AccessibleText>
               <AccessibleTextInput
                 value={dropoff}
                 onChangeText={setDropoff}
-                placeholder="Drop-off location"
-                style={styles.input}
+                placeholder={t("parcel_dropoff_placeholder")}
+                style={[styles.input, { color: colors.text }]}
               />
             </View>
           </View>
 
           {/* PARCEL DETAILS */}
-          <AccessibleText style={styles.sectionTitle}>
-            Parcel Details
+          <AccessibleText style={[styles.sectionTitle, { color: colors.text }]}>
+            {t("parcel_details_title")}
           </AccessibleText>
 
           <View
@@ -190,29 +183,30 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
             ]}
           >
             <AccessibleTextInput
-              placeholder="Item Description (e.g., Documents)"
+              placeholder={t("parcel_item_placeholder")}
               value={itemDescription}
               onChangeText={setItemDescription}
-              style={styles.field}
+              style={[styles.field, { color: colors.text }]}
             />
 
             <View style={styles.rowBetween}>
               <AccessibleTextInput
-                placeholder="Weight (kg)"
+                placeholder={t("parcel_weight_placeholder")}
                 value={weight}
                 onChangeText={setWeight}
-                style={styles.fieldHalf}
+                style={[styles.fieldHalf, { color: colors.text }]}
               />
+
               <AccessibleTextInput
-                placeholder="Estimated Value"
+                placeholder={t("parcel_value_placeholder")}
                 value={estimatedValue}
                 onChangeText={setEstimatedValue}
-                style={styles.fieldHalf}
+                style={[styles.fieldHalf, { color: colors.text }]}
               />
             </View>
           </View>
 
-          {/* SERVICE OPTION */}
+          {/* SERVICE CARD */}
           <View
             style={[
               styles.serviceCard,
@@ -223,14 +217,14 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
               },
             ]}
           >
-            <AccessibleText style={styles.serviceEmoji}>🏍️</AccessibleText>
+            <AccessibleText style={[styles.serviceEmoji, { color: colors.text }]}>🏍️</AccessibleText>
 
             <View style={{ flex: 1 }}>
-              <AccessibleText style={styles.serviceTitle}>
-                Bykea Delivery
+              <AccessibleText style={[styles.serviceTitle, { color: colors.text }]}>
+                {t("parcel_service_title")}
               </AccessibleText>
-              <AccessibleText style={styles.serviceSubtitle}>
-                Documents & Parcels
+              <AccessibleText style={[styles.serviceSubtitle, { color: colors.textSecondary }]}>
+                {t("parcel_service_subtitle")}
               </AccessibleText>
             </View>
 
@@ -241,7 +235,7 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
             </AccessibleText>
           </View>
 
-          {/* CONFIRM BUTTON */}
+          {/* CONFIRM */}
           <TouchableOpacity
             style={[
               styles.confirmButton,
@@ -249,8 +243,8 @@ const ParcelDetailsScreen = ({ navigation, route }) => {
             ]}
             onPress={handleConfirm}
           >
-            <AccessibleText style={styles.confirmText}>
-              Confirm Delivery
+            <AccessibleText style={[styles.confirmText, { color: colors.text }]}>
+              {t("parcel_confirm_btn")}
             </AccessibleText>
           </TouchableOpacity>
         </ScrollView>
@@ -278,66 +272,27 @@ const styles = StyleSheet.create({
   },
 
   handleWrapper: { alignItems: "center", marginBottom: 8 },
-  handle: {
-    width: 50,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#666",
-  },
+  handle: { width: 50, height: 5, borderRadius: 3 },
 
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "white",
-    marginBottom: 10,
-  },
-  label: {
-    color: "#B0B0B0",
-    marginBottom: 4,
-    fontSize: 13,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "spaceBetween",
-  },
-  input: {
-    flex: 1,
-    color: "white",
-    borderRadius: 5,
-  },
-  icon: {
-    fontSize: 20,
-    marginRight: 8,
-    color: "white",
-  },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 10 },
 
-  card: {
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
+  label: { marginBottom: 4, fontSize: 13 },
 
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "white",
-    marginBottom: 10,
-  },
+  row: { flexDirection: "row", alignItems: "center" },
 
-  field: {
-    marginBottom: 12,
-    color: "white",
-    borderRadius: 5,
-  },
-  fieldHalf: {
-    width: "48%",
-    color: "white",
-    borderRadius: 5,
-  },
+  rowBetween: { flexDirection: "row", justifyContent: "space-between" },
+
+  input: { flex: 1, borderRadius: 5 },
+
+  icon: { fontSize: 20, marginRight: 8 },
+
+  card: { padding: 14, borderRadius: 12, marginBottom: 20 },
+
+  sectionTitle: { fontSize: 16, fontWeight: "700", marginBottom: 10 },
+
+  field: { marginBottom: 12, borderRadius: 5 },
+
+  fieldHalf: { width: "48%", borderRadius: 5 },
 
   serviceCard: {
     flexDirection: "row",
@@ -347,24 +302,13 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
 
-  serviceEmoji: {
-    fontSize: 45,
-    marginRight: 14,
-  },
+  serviceEmoji: { fontSize: 45, marginRight: 14 },
 
-  serviceTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "white",
-  },
-  serviceSubtitle: {
-    fontSize: 14,
-    color: "#9CA3AF",
-  },
-  servicePrice: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
+  serviceTitle: { fontSize: 16, fontWeight: "700" },
+
+  serviceSubtitle: { fontSize: 14 },
+
+  servicePrice: { fontSize: 18, fontWeight: "700" },
 
   confirmButton: {
     paddingVertical: 16,
@@ -372,9 +316,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 40,
   },
-  confirmText: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+
+  confirmText: { fontSize: 16, fontWeight: "700" },
 });

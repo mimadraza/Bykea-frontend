@@ -12,7 +12,6 @@ import RideHistoryScreen from "../screens/RideHistoryScreen";
 import RideInProgressScreen from "../screens/RideInProgressScreen";
 import HelplineScreen from "../screens/HelplineScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import DeliveryDetailsScreen from "../screens/DeliveryDetailsScreen";
 import ParcelDetailsScreen from "../screens/ParcelDetailsScreen";
 import SearchingRiderScreen from "../screens/SearchingRiderScreen";
 
@@ -39,7 +38,6 @@ export type RootStackParamList = {
   Profile: undefined;
   RideHistory: undefined;
   Helpline: undefined;
-  DeliveryDetails: undefined;
   ParcelDetails: undefined;
   SearchingRider: undefined;
 };
@@ -68,7 +66,6 @@ const AppNavigator = () => {
         <Stack.Screen name="RideHistory" component={RideHistoryScreen} />
         <Stack.Screen name="RideInProgress" component={RideInProgressScreen} />
         <Stack.Screen name="Helpline" component={HelplineScreen} />
-        <Stack.Screen name="DeliveryDetails" component={DeliveryDetailsScreen} />
         <Stack.Screen name="ParcelDetails" component={ParcelDetailsScreen} />
         <Stack.Screen name="SearchingRider" component={SearchingRiderScreen} />
       </Stack.Navigator>

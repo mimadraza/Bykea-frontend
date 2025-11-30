@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Animated,
   Image,
+  I18nManager,
 } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
@@ -15,6 +16,7 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 
 import AccessibleText from "./AccessibleText";
 import { useAccessibility } from "../context/AccessibilityContext";
+import { useTranslation } from "react-i18next";
 
 import { logout, loadUsers, getLoggedInUser } from "../backend/authBackend";
 
@@ -28,12 +30,14 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
   const navigation = useNavigation<NavProp>();
   const { colors, borderWidth } = useAccessibility();
+  const { t } = useTranslation();
+  const isRTL = I18nManager.isRTL;
 
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
-      const phone = await getLoggedInUser();    // returns logged-in phone
+      const phone = await getLoggedInUser();
       if (!phone) return;
 
       const users = await loadUsers();
@@ -44,6 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
 
   return (
     <>
+      {/* OVERLAY */}
       <TouchableOpacity style={styles.overlay} onPress={onClose} />
 
       <Animated.View
@@ -51,22 +56,28 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
           styles.sidebar,
           {
             transform: [{ translateX: slideAnim }],
-            backgroundColor: colors.background,
+            backgroundColor: colors.surface,
             borderRightWidth: borderWidth,
             borderColor: colors.border,
           },
         ]}
       >
         {/* HEADER */}
-        <View style={styles.header}>
+        <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
           <Image
-            source={{ uri: "https://placekitten.com/200/200" }}
-            style={styles.avatar}
+            source={{
+              uri:
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuAkSP1DOTH48-GTn-1xJWqoW4axymhlNvTaGYWFySWrPCKVp0HLFu-xZT5JEUD-ap107K9KvJzdz-LBmO96TiC3sS9prKScSaENDKwfVd3-_q34_aM86YxJnyBk1QjwvFUF19hEw_MCM4A-7Ofcs682JpkjdqbCLXb6ipP3pG1KhbyrjceJgdjI_8P_WGngMzgmtF-88CV6K8_4EMKTy_WE97OWhKfE5Fk_ZKeyAegnQjfHZbJn1L5SwQ9kd_e0p5gJL_cukCIoGkWr",
+            }}
+            style={[
+              styles.avatar,
+              { backgroundColor: colors.cardBackground },
+            ]}
+            resizeMode="cover"
           />
-
           <View>
-            <AccessibleText style={styles.name}>
-              {user?.name || "User"}
+            <AccessibleText style={[styles.name, { color: colors.text }]}>
+              {user?.name || t("sidebar_user")}
             </AccessibleText>
 
             <TouchableOpacity
@@ -75,73 +86,146 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
                 navigation.navigate("Profile");
               }}
             >
-              <AccessibleText style={styles.viewProfile}>
-                View Profile
+              <AccessibleText style={[styles.viewProfile, { color: colors.primary }]}>
+                {t("sidebar_view_profile")}
               </AccessibleText>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* MENU */}
+        {/* MENU SECTION 1 */}
         <View style={styles.menuSection}>
+          {/* Ride History */}
           <TouchableOpacity
-            style={[styles.menuItem, styles.activeItem]}
+            style={[
+              styles.menuItem,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                borderWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
             onPress={() => navigation.navigate("RideHistory")}
           >
-            <AccessibleText style={[styles.menuIcon, styles.activeIcon]}>
+            <AccessibleText style={[styles.menuIcon, { color: colors.primary }]}>
               🚲
             </AccessibleText>
-            <AccessibleText style={[styles.menuLabel, styles.activeLabel]}>
-              Ride History
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_ride_history")}
             </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>📦</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>
-              Delivery History
+          {/* Delivery History */}
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              📦
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_delivery_history")}
             </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>💳</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>
-              Payment Methods
+          {/* Payment Methods */}
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              💳
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_payment_methods")}
             </AccessibleText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>🏷️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>
-              Promotions
+          {/* Promotions */}
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              🏷️
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_promotions")}
             </AccessibleText>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.separator} />
+        <View
+          style={[
+            styles.separator,
+            { borderBottomColor: colors.border, borderBottomWidth: borderWidth },
+          ]}
+        />
 
-        {/* SECOND SECTION */}
+        {/* MENU SECTION 2 */}
         <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
-            <AccessibleText style={styles.menuIcon}>❓</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>
-              Help & Support
+          <TouchableOpacity
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
+            onPress={() => navigation.navigate("Helpline")}
+          >
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              ❓
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_help_support")}
             </AccessibleText>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[
+              styles.menuItem,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: borderWidth,
+              },
+              isRTL && styles.rtlRow,
+            ]}
             onPress={() => navigation.navigate("Accessibility")}
           >
-            <AccessibleText style={styles.menuIcon}>⚙️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Settings</AccessibleText>
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              ⚙️
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_settings")}
+            </AccessibleText>
           </TouchableOpacity>
         </View>
 
         {/* FOOTER */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.rtlRow]}
             onPress={async () => {
               await logout();
               onClose();
@@ -154,11 +238,17 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
               );
             }}
           >
-            <AccessibleText style={styles.menuIcon}>↩️</AccessibleText>
-            <AccessibleText style={styles.menuLabel}>Logout</AccessibleText>
+            <AccessibleText style={[styles.menuIcon, { color: colors.text }]}>
+              ↩️
+            </AccessibleText>
+            <AccessibleText style={[styles.menuLabel, { color: colors.text }]}>
+              {t("sidebar_logout")}
+            </AccessibleText>
           </TouchableOpacity>
 
-          <AccessibleText style={styles.version}>v3.14.2</AccessibleText>
+          <AccessibleText style={[styles.version, { color: colors.textSecondary }]}>
+            v3.14.2
+          </AccessibleText>
         </View>
       </Animated.View>
     </>
@@ -167,9 +257,9 @@ const Sidebar: React.FC<SidebarProps> = ({ slideAnim, onClose }) => {
 
 export default Sidebar;
 
-/* ============================
+/* ----------------------------
    STYLES
-============================ */
+---------------------------- */
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
@@ -180,6 +270,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     zIndex: 40,
   },
+
   sidebar: {
     position: "absolute",
     top: 0,
@@ -192,51 +283,70 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     zIndex: 50,
   },
+
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 15,
     marginBottom: 30,
   },
+
+  rtlRow: {
+    flexDirection: "row-reverse",
+  },
+
   avatar: {
     width: 64,
     height: 64,
     borderRadius: 999,
+    overflow: "hidden",
   },
+
   name: {
     fontSize: 20,
     fontWeight: "700",
-    color: "white",
   },
+
   viewProfile: {
     fontSize: 14,
-    color: "#0df259",
     marginTop: 2,
   },
-  menuSection: { marginBottom: 20 },
+
+  menuSection: {
+    marginBottom: 20,
+  },
+
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     height: 48,
     paddingHorizontal: 10,
-    borderRadius: 5,
+    borderRadius: 6,
     marginBottom: 6,
   },
-  menuIcon: { fontSize: 20, width: 28, color: "#ccc" },
-  menuLabel: { fontSize: 16, color: "white", fontWeight: "500" },
-  activeItem: { backgroundColor: "rgba(13,242,89,0.15)" },
-  activeIcon: { color: "#0df259" },
-  activeLabel: { color: "#0df259", fontWeight: "700" },
+
+  menuIcon: {
+    fontSize: 20,
+    width: 28,
+  },
+
+  menuLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
   separator: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: "#333",
     marginVertical: 20,
   },
-  footer: { marginTop: "auto", alignItems: "flex-start" },
+
+  footer: {
+    marginTop: "auto",
+    alignItems: "flex-start",
+  },
+
   version: {
     marginTop: 10,
     fontSize: 12,
-    color: "#666",
     alignSelf: "center",
   },
 });

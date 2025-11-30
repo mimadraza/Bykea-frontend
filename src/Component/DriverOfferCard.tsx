@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import AccessibleText from "./AccessibleText";
 import { useTranslation } from "react-i18next";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 export interface DriverOffer {
   id: string;
@@ -20,19 +21,38 @@ interface Props {
 
 const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
   const { t } = useTranslation();
+  const { colors, borderWidth } = useAccessibility();
 
   return (
-    <View style={styles.card}>
-
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+          borderWidth,
+        },
+      ]}
+    >
       {/* Top row: Avatar + Name + Rating + Price/ETA */}
       <View style={styles.topRow}>
-
         {/* Avatar */}
         {offer.avatarUrl ? (
           <Image source={{ uri: offer.avatarUrl }} style={styles.avatar} />
         ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <AccessibleText style={styles.avatarInitial}>
+          <View
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth,
+              },
+            ]}
+          >
+            <AccessibleText
+              style={[styles.avatarInitial, { color: colors.text }]}
+            >
               {offer.name.charAt(0).toUpperCase()}
             </AccessibleText>
           </View>
@@ -41,12 +61,27 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
         {/* Name + Rating */}
         <View style={styles.nameColumn}>
           <View style={styles.nameRow}>
-            <AccessibleText style={styles.nameText}>{offer.name}</AccessibleText>
+            <AccessibleText
+              style={[styles.nameText, { color: colors.text }]}
+            >
+              {offer.name}
+            </AccessibleText>
 
             {/* Rating pill */}
-            <View style={styles.ratingPill}>
-              <AccessibleText style={styles.ratingStar}>★</AccessibleText>
-              <AccessibleText style={styles.ratingValue}>
+            <View
+              style={[
+                styles.ratingPill,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <AccessibleText
+                style={[styles.ratingStar, { color: "#FFD700" }]}
+              >
+                ★
+              </AccessibleText>
+              <AccessibleText
+                style={[styles.ratingValue, { color: colors.text }]}
+              >
                 {offer.rating.toFixed(1)}
               </AccessibleText>
             </View>
@@ -55,23 +90,53 @@ const DriverOfferCard: React.FC<Props> = ({ offer, onAccept, onReject }) => {
 
         {/* Price + ETA block (aligned right) */}
         <View style={styles.priceColumn}>
-          <AccessibleText style={styles.priceText}>PKR {offer.price}</AccessibleText>
-          <AccessibleText style={styles.etaText}>{offer.eta}</AccessibleText>
+          <AccessibleText
+            style={[styles.priceText, { color: colors.text }]}
+          >
+            PKR {offer.price}
+          </AccessibleText>
+          <AccessibleText
+            style={[styles.etaText, { color: colors.textSecondary }]}
+          >
+            {offer.eta}
+          </AccessibleText>
         </View>
-
       </View>
 
       {/* Buttons Row */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
-          <AccessibleText style={styles.rejectText}>{t("reject_btn")}</AccessibleText>
+        <TouchableOpacity
+          style={[
+            styles.rejectBtn,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderWidth,
+            },
+          ]}
+          onPress={onReject}
+        >
+          <AccessibleText
+            style={[styles.rejectText, { color: colors.text }]}
+          >
+            {t("reject_btn")}
+          </AccessibleText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.acceptBtn} onPress={onAccept}>
-          <AccessibleText style={styles.acceptText}>{t("accept_btn")}</AccessibleText>
+        <TouchableOpacity
+          style={[
+            styles.acceptBtn,
+            { backgroundColor: colors.primary },
+          ]}
+          onPress={onAccept}
+        >
+          <AccessibleText
+            style={[styles.acceptText, { color: colors.text }]}
+          >
+            {t("accept_btn")}
+          </AccessibleText>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };
@@ -80,40 +145,33 @@ export default DriverOfferCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "rgba(28, 31, 37, 0.92)",
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 12,
-    width: "100%",
+    borderRadius: 16,
+    padding: 14,
   },
 
   topRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 12,
   },
 
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     marginRight: 12,
-  },
-
-  avatarPlaceholder: {
-    backgroundColor: "#333",
     justifyContent: "center",
     alignItems: "center",
   },
 
+  avatarPlaceholder: {},
   avatarInitial: {
-    color: "white",
+    fontSize: 22,
     fontWeight: "700",
-    fontSize: 20,
   },
 
   nameColumn: {
     flex: 1,
-    justifyContent: "center",
   },
 
   nameRow: {
@@ -124,78 +182,69 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "white",
     marginRight: 8,
   },
 
   ratingPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#133A20",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
 
   ratingStar: {
-    color: "#00E676",
-    fontSize: 12,
-    marginRight: 2,
+    fontSize: 14,
+    marginRight: 3,
   },
 
   ratingValue: {
-    color: "#00E676",
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
   },
 
   priceColumn: {
     alignItems: "flex-end",
-    justifyContent: "center",
-    minWidth: 90,
   },
 
   priceText: {
-    color: "#00E676",
-    fontWeight: "800",
     fontSize: 16,
+    fontWeight: "700",
   },
 
   etaText: {
-    color: "#B5B5B5",
-    marginTop: 4,
-    fontSize: 12,
+    fontSize: 13,
+    marginTop: 2,
   },
 
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 14,
+    marginTop: 10,
   },
 
   rejectBtn: {
-    backgroundColor: "#32363A",
+    flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-
-  rejectText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: 14,
+    borderRadius: 10,
+    marginRight: 8,
+    alignItems: "center",
   },
 
   acceptBtn: {
-    backgroundColor: "#00E676",
+    flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 26,
-    borderRadius: 12,
+    borderRadius: 10,
+    marginLeft: 8,
+    alignItems: "center",
+  },
+
+  rejectText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   acceptText: {
-    color: "#0A0A0A",
-    fontWeight: "800",
     fontSize: 14,
+    fontWeight: "700",
   },
 });

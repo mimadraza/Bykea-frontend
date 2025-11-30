@@ -37,7 +37,7 @@ export const AccessibilityProvider: React.FC<{ children: ReactNode }> = ({ child
   // 1. Add High Contrast State
   const [highContrast, setHighContrast] = useState(false);
 
-  const fontSizeMultiplier = largeText ? 1.3 : 1.0;
+  const fontSizeMultiplier = largeText ? 1.1 : 1.0;
   //LOGIC: If High Contrast, borders are 3px. Otherwise 1px (or 0 for some cards)
   const borderWidth = highContrast ? 3 : 1;
   // --- THEME GENERATION LOGIC ---

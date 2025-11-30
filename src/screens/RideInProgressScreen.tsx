@@ -29,29 +29,32 @@ const RideInProgressScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, borderWidth, highContrast } = useAccessibility();
 
-  const {
-    driver,
-    from,
-    start,
-    end,
-    geometry,
-    pickup,
-    dropoff,
-    itemDescription,
-    weight,
-    estimatedValue,
-  } = (route.params || {}) as {
-    driver: { name: string; rating: number };
-    from?: string;
-    start?: { lat: number; lng: number };
-    end?: { lat: number; lng: number };
-    geometry?: { lat: number; lng: number }[];
-    pickup?: string;
-    dropoff?: string;
-    itemDescription?: string;
-    weight?: string;
-    estimatedValue?: string;
-  };
+ const {
+   driver,
+   from,
+   start,
+   end,
+   geometry,
+   pickup,
+   dropoff,
+   itemDescription,
+   weight,
+   estimatedValue,
+   destination, // ✅ <-- ADDED HERE
+ } = (route.params || {}) as {
+   driver: { name: string; rating: number };
+   from?: string;
+   start?: { lat: number; lng: number };
+   end?: { lat: number; lng: number };
+   geometry?: { lat: number; lng: number }[];
+   pickup?: string;
+   dropoff?: string;
+   itemDescription?: string;
+   weight?: string;
+   estimatedValue?: string;
+   destination?: string; // ✅ <-- ADDED HERE
+ };
+
 
   const [rideFinished, setRideFinished] = useState(false);
   const [rating, setRating] = useState(0);
@@ -104,10 +107,15 @@ const RideInProgressScreen: React.FC = () => {
         index: 1,
         routes: [
           { name: "Home" },
-          { name: "ChooseRide", params: { destination: "" } },
+          {
+            name: "ChooseRide",
+            params: {
+              destination: destination,
+            },
+          },
         ],
       })
-    );
+    )
   };
 
   const submitFeedback = () => {

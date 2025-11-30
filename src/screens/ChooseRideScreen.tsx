@@ -318,16 +318,18 @@ const ChooseRideScreen: React.FC = () => {
             styles.confirmButton,
             { backgroundColor: colors.primary },
           ]}
-          onPress={() => {
-            if (!destCoords || routeGeometry.length === 0) return;
-            navigation.navigate("RideRequest", {
-              rideType: selectedRide,
-              fare: fareCount[selectedRide],
-              start: HOME_START,
-              end: destCoords,
-              geometry: routeGeometry,
-            });
-          }}
+           onPress={() => {
+              if (!destCoords || routeGeometry.length === 0) return;
+              navigation.navigate("RideRequest", {
+                rideType: selectedRide,
+                fare: fareCount[selectedRide],
+                start: HOME_START,
+                end: destCoords,
+                geometry: routeGeometry,
+                // ✅ pass it along
+                destination,
+              });
+            }}
         >
           <AccessibleText style={styles.confirmButtonText}>
             {t("find_ride_btn")}

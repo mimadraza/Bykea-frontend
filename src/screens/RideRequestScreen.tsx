@@ -34,19 +34,27 @@ const RIDE_META = {
 const RideRequestScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
-  const { destination } = route.params || {};
+const {
+  rideType,
+  fare: initialFare,
+  start,
+  end,
+  geometry,
+  destination = "",
+} = route.params as {
+  rideType: "Motorbike" | "Car" | "RickShaw";
+  fare: number;
+  start: LatLng;
+  end: LatLng;
+  geometry: LatLng[];
+  destination?: string;
+};
+
   const { t } = useTranslation();
   const { colors, borderWidth, highContrast } = useAccessibility();
 
   const mapRef = useRef<WebView>(null);
 
-  const { rideType, fare: initialFare, start, end, geometry } = route.params as {
-    rideType: "Motorbike" | "Car" | "RickShaw";
-    fare: number;
-    start: LatLng;
-    end: LatLng;
-    geometry: LatLng[];
-  };
 
   const [fare, setFare] = useState(initialFare);
   const [offers, setOffers] = useState<DriverOffer[]>([]);
@@ -121,6 +129,7 @@ const RideRequestScreen: React.FC = () => {
       start,
       end,
       geometry,
+      destination,
     });
 
     setOffers((prev) => prev.filter((o) => o.id !== offer.id));
@@ -190,11 +199,11 @@ const RideRequestScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.cancelBtn}
-          onPress={() =>
-            navigation.replace("ChooseRide", {
-              destination: destination ?? "",
-            })
-          }
+         onPress={() =>
+           navigation.replace("ChooseRide", {
+             destination,
+           })
+         }
         >
           <AccessibleText style={styles.cancelText}>
             {t("cancel_ride_btn")}

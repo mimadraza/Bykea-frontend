@@ -83,6 +83,7 @@ const resources = {
       // RideRequestScreen
       "keep_looking_btn": "KEEP LOOKING",
       "cancel_ride_btn": "CANCEL RIDE",
+      "driver_offer_eta_format": "mins away",
       "driver_offer_eta": "mins away",
 
       "recent_loc_1": "Iba, University Road, Karachi",
@@ -292,7 +293,8 @@ const resources = {
       // RideRequestScreen
       "keep_looking_btn": "تلاش جاری رکھیں",
       "cancel_ride_btn": "سفر منسوخ کریں",
-      "driver_offer_eta": "منٹ دور",
+      "driver_offer_eta": "نٹ دور",
+      "driver_offer_eta_format": "منٹ دور",
 
       "recent_loc_1": "آئی بی اے، یونیورسٹی روڈ، کراچی",
       "recent_loc_2": "فالکن کمپلیکس، سیام ہاؤس",

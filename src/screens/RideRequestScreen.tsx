@@ -28,7 +28,7 @@ const DRIVER_POOL: Omit<DriverOffer, "id">[] = [
 const RIDE_META = {
   Motorbike: { icon: "🛵", passengers: "1 Passenger" },
   Car: { icon: "🚗", passengers: "3–4 Passengers" },
-  RickShaw: { icon: "🛺", passengers: "3 Passengers" },
+  Rickshaw: { icon: "🛺", passengers: "3 Passengers" },
 };
 
 const RideRequestScreen: React.FC = () => {

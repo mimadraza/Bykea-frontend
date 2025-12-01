@@ -10,6 +10,7 @@ import {
 
 import Logo from "../Component/Logo";
 import { useAccessibility } from "../context/AccessibilityContext";
+import * as Clarity from "@microsoft/react-native-clarity";
 
 import {
   checkPhoneExists,
@@ -85,6 +86,7 @@ const AuthScreen = ({ navigation }) => {
 
     // Login existing user
     await loginUser(phone.trim());
+    Clarity.setCustomUserId(phone.trim());
     navigation.replace("Accessibility");
   };
 

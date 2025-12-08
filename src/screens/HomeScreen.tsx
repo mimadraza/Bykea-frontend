@@ -18,6 +18,7 @@ import AccessibleText from "../Component/AccessibleText";
 import AccessibleTextInput from "../Component/AccessibleTextInput";
 import { useAccessibility } from "../context/AccessibilityContext";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import DraggableBottomSheet from "../Component/DraggableBottomSheet";
 
 import LeafletMap, {
   LeafletMapHandle,

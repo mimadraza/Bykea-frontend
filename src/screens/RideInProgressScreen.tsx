@@ -233,7 +233,7 @@ const RideInProgressScreen: React.FC = () => {
                 <AccessibleText
                   style={[styles.statusText, { color: colors.text }]}
                 >
-                  {t("status_on_way")}
+                  {t("status_enroute")}
                 </AccessibleText>
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>

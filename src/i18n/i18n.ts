@@ -57,7 +57,7 @@ const resources = {
       "motorbike_desc": "1 Passenger",
       "car_name": "Car",
       "car_desc": "3–4 Passengers",
-      "rickshaw_name": "RickShaw",
+      "rickshaw_name": "Rickshaw",
       "rickshaw_desc": "3 Passengers",
       "find_ride_btn": "FIND RIDE",
       "enter_fare_popup_title": "Enter Fare",
@@ -92,6 +92,7 @@ const resources = {
 
       // RideInProgressScreen
       "status_on_way": "Rider is on his way",
+      "status_enroute": "You will reach your destination shortly",
       "action_share": "Share",
       "action_contact": "Contact",
 
@@ -302,6 +303,7 @@ const resources = {
 
       // RideInProgressScreen
       "status_on_way": "رائڈر راستے میں ہے",
+      "status_enroute": "آپ جلد ہی اپنی منزل پر پہنچ جائیں گے"
       "action_share": "شیئر کریں",
       "action_contact": "رابطہ کریں",
 
